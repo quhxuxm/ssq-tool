@@ -1,14 +1,18 @@
+use std::error::Error;
+
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error>> {
     let rounds = 5;
-    for i in 1..=rounds {
-        println!("### running in the round {i}.");
+    for _ in 1..=rounds {
+        println!("##########");
         let red_balls = generate_red_balls().await;
         let blue_ball = generate_blue_ball().await;
-        println!("red balls: {red_balls:?}");
-        println!("blue ball: {blue_ball}");
-        println!("### complete round {i}")
+        println!("红球: {red_balls:?}");
+        println!("蓝球: {blue_ball}");
+        println!("##########");
     }
+    tokio::signal::ctrl_c().await?;
+    Ok(())
 }
 
 async fn generate_red_balls() -> Vec<u8> {
