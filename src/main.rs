@@ -1,14 +1,14 @@
 use crate::error::Error;
 
-pub mod collector;
-pub mod data;
 pub mod domain;
 pub mod error;
+pub mod official;
+pub mod processor;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let prize_page = collector::collect_official_data().await?;
-    let prize_records = prize_page.prize_records;
+    let prize_record_page = official::generate_official_data().await?;
+    let prize_records = prize_record_page.prize_records;
     for record in prize_records {
         let red_balls = record.red;
         let blue_ball = record.blue;
