@@ -1,25 +1,47 @@
 use crate::{domain::PrizeRecordPage, error::Error};
 use async_trait;
-use std::{any::Any, sync::Arc};
+use std::{any::Any, collections::HashMap, sync::Arc};
 
-pub mod storage;
+pub mod prepare;
 
+/// The context of the processor and processor chain
 pub struct Context {
-    pub prize_record_page: Arc<PrizeRecordPage>,
-    pub previous_result: Option<Box<dyn Any>>,
+    prize_record_page: Arc<PrizeRecordPage>,
+    attributes: HashMap<String, Box<dyn Any + Send + 'static>>,
 }
 
 impl Context {
-    pub fn previous_result<T>(&self) -> Option<&T> {
-        let previous_result = self.previous_result()?;
-        let previous_result = previous_result as &dyn Any;
-        let previous_resutl = previous_result.downcast_ref::<T>();
-        previous_resutl
+    pub fn new(prize_record_page: Arc<PrizeRecordPage>) -> Self {
+        Self {
+            attributes: HashMap::new(),
+            prize_record_page,
+        }
+    }
+
+    pub fn attribute<T>(&self, name: &str) -> Option<&T>
+    where
+        T: Send + 'static,
+    {
+        match self.attributes.get(name).as_ref() {
+            Some(attr) => attr.downcast_ref::<T>(),
+            None => None,
+        }
+    }
+
+    pub fn add_attribute<T>(&mut self, name: &str, value: T) -> Option<Box<dyn Any + Send>>
+    where
+        T: Send + 'static,
+    {
+        self.attributes.insert(name.to_owned(), Box::new(value))
     }
 }
 
 #[async_trait::async_trait]
 pub trait Processor {
+    /// Return the name of the processor
+    fn name(&self) -> &str;
+
+    /// Define the execut logic of the processor
     async fn execute(&mut self, context: &mut Context) -> Result<(), Error>;
 }
 
@@ -29,13 +51,16 @@ pub struct ProcessorChain {
 }
 
 impl ProcessorChain {
+    /// Add a processor to the chain
     pub fn add_processor(&mut self, processor: Box<dyn Processor>) {
         self.processors.push(processor);
     }
 
-    async fn execute(&mut self, mut context: Context) -> Result<(), Error> {
+    /// Execute all the processors in the chain
+    pub async fn execute(&mut self, context: &mut Context) -> Result<(), Error> {
         for processor in self.processors.iter_mut() {
-            processor.execute(&mut context).await?;
+            println!("executing processor: {}", processor.name());
+            processor.execute(context).await?;
         }
         Ok(())
     }
