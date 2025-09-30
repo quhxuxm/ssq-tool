@@ -15,12 +15,30 @@ impl Processor for PrepareProcessor {
         let Context {
             prize_record_page, ..
         } = context;
-        for prize_record in &prize_record_page.prize_records {
-            let redballs = prize_record.red.as_slice();
-            let blueball = prize_record.blue;
-            println!("RED: {redballs:?} ; BLUE: {blueball}");
-        }
+        let mut redball_column_data: Vec<Vec<bool>> = vec![vec![]; 33];
+        let mut blueball_column_data: Vec<Vec<bool>> = vec![vec![]; 16];
+        prize_record_page
+            .prize_records
+            .iter()
+            .for_each(|prize_record| {
+                let redballs = prize_record.red.as_slice();
+                let blueball = prize_record.blue;
+                blueball_column_data
+                    .iter_mut()
+                    .enumerate()
+                    .for_each(|(i, v)| {
+                        v.push(i == blueball as usize);
+                    });
+                redball_column_data
+                    .iter_mut()
+                    .enumerate()
+                    .for_each(|(i, v)| {
+                        v.push(redballs.contains(&(i as u8)));
+                    });
+            });
 
+        println!("BLUE: {blueball_column_data:?}");
+        println!("RED: {redball_column_data:?}");
         Ok(())
     }
 }
