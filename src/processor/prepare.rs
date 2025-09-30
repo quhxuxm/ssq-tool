@@ -1,3 +1,5 @@
+use polars::{frame::DataFrame, prelude::Column};
+
 use crate::{
     error::Error,
     processor::{Context, Processor},
@@ -36,6 +38,15 @@ impl Processor for PrepareProcessor {
                         v.push(redballs.contains(&(i as u8)));
                     });
             });
+        let mut redball_data_framed_columns = vec![];
+        redball_column_data
+            .iter_mut()
+            .enumerate()
+            .for_each(|(i, v)| {
+                redball_data_framed_columns.push(Column::new(i.to_string().into(), v))
+            });
+
+        let redball_data_framed = DataFrame::new(redball_data_framed_columns);
 
         println!("BLUE: {blueball_column_data:?}");
         println!("RED: {redball_column_data:?}");
