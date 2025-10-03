@@ -1,4 +1,8 @@
 use std::collections::HashMap;
+use std::ops::Deref;
+use std::ops::Sub;
+
+use crate::error::Error;
 
 use super::date_codec;
 use super::prize_grade_codec;
@@ -52,10 +56,39 @@ pub struct PrizeGrade {
     pub prize_type_money: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[serde(try_from = "String")]
+pub struct PrizeRecordCode(pub i32);
+
+impl TryFrom<String> for PrizeRecordCode {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let raw_code = value.parse::<i32>()?;
+        Ok(Self(raw_code))
+    }
+}
+
+impl Deref for PrizeRecordCode {
+    type Target = i32;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Sub for PrizeRecordCode {
+    type Output = i32;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.0 - rhs.0
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PrizeRecord {
     pub name: String,
-    pub code: String,
+    pub code: PrizeRecordCode,
     #[serde(rename = "detailsLink")]
     pub details_link: String,
     #[serde(rename = "videoLink")]

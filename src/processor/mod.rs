@@ -1,8 +1,58 @@
-use crate::{domain::PrizeRecordPage, error::Error};
+use crate::{
+    domain::PrizeRecordPage,
+    error::Error,
+    processor::business_obj::{BlueBallRelationship, RedBallRelationship},
+};
 use async_trait;
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{
+    any::Any,
+    borrow::Borrow,
+    collections::HashMap,
+    marker::PhantomData,
+    sync::{Arc, LazyLock},
+};
 
-pub mod prepare;
+pub mod business_obj;
+pub mod count_prized_blueball;
+pub mod count_prized_redball;
+pub mod occur_interval;
+pub mod relationship;
+pub mod summary;
+
+pub const PRIZED_BLUE_BALLS_COUNTS: LazyLock<ContextAttr<HashMap<u8, i32>>> =
+    LazyLock::new(|| ContextAttr::new("PRIZED_BLUE_BALLS_COUNT"));
+pub const PRIZED_RED_BALLS_COUNTS: LazyLock<ContextAttr<HashMap<u8, i32>>> =
+    LazyLock::new(|| ContextAttr::new("PRIZED_RED_BALLS_COUNT"));
+pub const BLUE_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<u8, BlueBallRelationship>>> =
+    LazyLock::new(|| ContextAttr::new("BLUE_BALL_RELATIONSHIPS"));
+pub const RED_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<u8, RedBallRelationship>>> =
+    LazyLock::new(|| ContextAttr::new("RED_BALL_RELATIONSHIPS"));
+
+pub const SORTED_BLUE_BALLS_COUNTS: LazyLock<ContextAttr<Vec<(u8, i32)>>> =
+    LazyLock::new(|| ContextAttr::new("SORTED_BLUE_BALLS_COUNTS"));
+pub const SORTED_RED_BALLS_COUNTS: LazyLock<ContextAttr<Vec<(u8, i32)>>> =
+    LazyLock::new(|| ContextAttr::new("SORTED_RED_BALLS_COUNTS"));
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct ContextAttr<T>
+where
+    T: Any + Send + 'static,
+{
+    name: String,
+    _val_type: PhantomData<T>,
+}
+
+impl<T> ContextAttr<T>
+where
+    T: Any + Send + 'static,
+{
+    pub fn new(name: impl Borrow<str>) -> Self {
+        Self {
+            name: name.borrow().to_owned(),
+            _val_type: PhantomData,
+        }
+    }
+}
 
 /// The context of the processor and processor chain
 pub struct Context {
@@ -18,21 +68,27 @@ impl Context {
         }
     }
 
-    pub fn attribute<T>(&self, name: &str) -> Option<&T>
+    pub fn attribute<T>(&self, name: &ContextAttr<T>) -> Option<&T>
     where
         T: Send + 'static,
     {
+        let ContextAttr { name, .. } = name;
         match self.attributes.get(name).as_ref() {
             Some(attr) => attr.downcast_ref::<T>(),
             None => None,
         }
     }
 
-    pub fn add_attribute<T>(&mut self, name: &str, value: T) -> Option<Box<dyn Any + Send>>
+    pub fn add_attribute<T>(
+        &mut self,
+        name: ContextAttr<T>,
+        value: T,
+    ) -> Option<Box<dyn Any + Send>>
     where
         T: Send + 'static,
     {
-        self.attributes.insert(name.to_owned(), Box::new(value))
+        let ContextAttr { name, .. } = name;
+        self.attributes.insert(name, Box::new(value))
     }
 }
 
