@@ -1,10 +1,10 @@
 use serde::{Deserialize, Deserializer, Serializer};
 
-pub fn serialize<S>(data: &Vec<String>, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize<S>(data: &[String], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let s = format!("{}", data.join(","));
+    let s = data.join(",").to_string();
     serializer.serialize_str(&s)
 }
 

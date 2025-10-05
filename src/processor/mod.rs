@@ -1,7 +1,7 @@
 use crate::{
-    domain::PrizeRecordPage,
+    domain::BusinessPrizeRecord,
     error::Error,
-    processor::business_obj::{BlueBallRelationship, RedBallRelationship},
+    processor::context_obj::{BallOccurInfo, BlueBallRelationship, RedBallRelationship},
 };
 use async_trait;
 use std::{
@@ -12,26 +12,19 @@ use std::{
     sync::{Arc, LazyLock},
 };
 
-pub mod business_obj;
-pub mod count_prized_blueball;
-pub mod count_prized_redball;
-pub mod occur_interval;
+pub mod context_obj;
+pub mod occur;
 pub mod relationship;
-pub mod summary;
 
-pub const PRIZED_BLUE_BALLS_COUNTS: LazyLock<ContextAttr<HashMap<u8, i32>>> =
-    LazyLock::new(|| ContextAttr::new("PRIZED_BLUE_BALLS_COUNT"));
-pub const PRIZED_RED_BALLS_COUNTS: LazyLock<ContextAttr<HashMap<u8, i32>>> =
-    LazyLock::new(|| ContextAttr::new("PRIZED_RED_BALLS_COUNT"));
-pub const BLUE_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<u8, BlueBallRelationship>>> =
+pub static BLUE_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<usize, BlueBallRelationship>>> =
     LazyLock::new(|| ContextAttr::new("BLUE_BALL_RELATIONSHIPS"));
-pub const RED_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<u8, RedBallRelationship>>> =
+pub static RED_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<usize, RedBallRelationship>>> =
     LazyLock::new(|| ContextAttr::new("RED_BALL_RELATIONSHIPS"));
 
-pub const SORTED_BLUE_BALLS_COUNTS: LazyLock<ContextAttr<Vec<(u8, i32)>>> =
-    LazyLock::new(|| ContextAttr::new("SORTED_BLUE_BALLS_COUNTS"));
-pub const SORTED_RED_BALLS_COUNTS: LazyLock<ContextAttr<Vec<(u8, i32)>>> =
-    LazyLock::new(|| ContextAttr::new("SORTED_RED_BALLS_COUNTS"));
+pub static PRIZED_BLUE_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, BallOccurInfo>>> =
+    LazyLock::new(|| ContextAttr::new("PRIZED_BLUE_BALLS_OCCUR_INFO"));
+pub static PRIZED_RED_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, BallOccurInfo>>> =
+    LazyLock::new(|| ContextAttr::new("PRIZED_RED_BALLS_OCCUR_INFO"));
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ContextAttr<T>
@@ -56,15 +49,15 @@ where
 
 /// The context of the processor and processor chain
 pub struct Context {
-    prize_record_page: Arc<PrizeRecordPage>,
+    prize_records: Arc<Vec<BusinessPrizeRecord>>,
     attributes: HashMap<String, Box<dyn Any + Send + 'static>>,
 }
 
 impl Context {
-    pub fn new(prize_record_page: Arc<PrizeRecordPage>) -> Self {
+    pub fn new(prize_records: Arc<Vec<BusinessPrizeRecord>>) -> Self {
         Self {
             attributes: HashMap::new(),
-            prize_record_page,
+            prize_records,
         }
     }
 
