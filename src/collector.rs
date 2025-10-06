@@ -7,7 +7,9 @@ use crate::{
 
 const OFFICIAL_DATA_FILE: &str = "official_data.json";
 
-pub async fn collect_business_data() -> Result<Vec<BusinessPrizeRecord>, Error> {
+pub async fn collect_business_data(
+    top_size: Option<usize>,
+) -> Result<Vec<BusinessPrizeRecord>, Error> {
     let official_data_json_path = Path::new(OFFICIAL_DATA_FILE);
     let official_data_json = File::open(official_data_json_path)?;
     let page = serde_json::from_reader::<File, OfficialPrizeRecordPage>(official_data_json)?;
@@ -27,5 +29,10 @@ pub async fn collect_business_data() -> Result<Vec<BusinessPrizeRecord>, Error> 
             business_prize_record
         })
         .collect::<Vec<BusinessPrizeRecord>>();
-    Ok(business_records)
+    let whole_size = business_records.len();
+    let top_size_elements = business_records
+        .into_iter()
+        .take(top_size.unwrap_or(whole_size))
+        .collect::<Vec<BusinessPrizeRecord>>();
+    Ok(top_size_elements)
 }

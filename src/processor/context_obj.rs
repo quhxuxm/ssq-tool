@@ -6,11 +6,11 @@ pub struct BallOccurInfo {
     intervals: Vec<usize>,
     max_interval: usize,
     min_interval: usize,
-    average_interval: f64,
+    average_interval: usize,
     average_occur_possibility: f64,
     occur_count: usize,
     last_occur_index: usize,
-    possible_next_occur_index: f64,
+    possible_next_occur_index: isize,
 }
 
 impl BallOccurInfo {
@@ -20,11 +20,11 @@ impl BallOccurInfo {
             intervals: Vec::new(),
             max_interval: 0,
             min_interval: 0,
-            average_interval: 0f64,
+            average_interval: 0,
             average_occur_possibility: 0f64,
             occur_count: 0,
             last_occur_index: 0,
-            possible_next_occur_index: 0f64,
+            possible_next_occur_index: isize::MIN,
         }
     }
 
@@ -56,11 +56,11 @@ impl BallOccurInfo {
         self.min_interval = min_interval;
     }
 
-    pub fn average_interval(&self) -> f64 {
+    pub fn average_interval(&self) -> usize {
         self.average_interval
     }
 
-    pub fn set_average_interval(&mut self, average_interval: f64) {
+    pub fn set_average_interval(&mut self, average_interval: usize) {
         self.average_interval = average_interval;
     }
 
@@ -88,11 +88,11 @@ impl BallOccurInfo {
         self.last_occur_index
     }
 
-    pub fn set_possible_next_occur_index(&mut self, possible_next_occur_index: f64) {
+    pub fn set_possible_next_occur_index(&mut self, possible_next_occur_index: isize) {
         self.possible_next_occur_index = possible_next_occur_index
     }
 
-    pub fn possible_next_occur_index(&self) -> f64 {
+    pub fn possible_next_occur_index(&self) -> isize {
         self.possible_next_occur_index
     }
 }

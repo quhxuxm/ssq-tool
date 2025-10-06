@@ -54,9 +54,9 @@ impl Processor for RelationshipProcessor {
                 });
             });
         });
-        info!("蓝球相关性：\n{blue_ball_relationships:#?}");
+        info!("蓝球相关性：\n{blue_ball_relationships:?}");
         context.add_attribute(BLUE_BALL_RELATIONSHIPS.clone(), blue_ball_relationships);
-        info!("红球相关性：\n{red_ball_relationships:#?}");
+        info!("红球相关性：\n{red_ball_relationships:?}");
         context.add_attribute(RED_BALL_RELATIONSHIPS.clone(), red_ball_relationships);
         Ok(())
     }

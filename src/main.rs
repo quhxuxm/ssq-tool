@@ -6,6 +6,7 @@ use crate::{
     error::Error,
     processor::{
         Processor, ProcessorChain, occur::BallOccurProcessor, relationship::RelationshipProcessor,
+        summary::create_summary_processor_chain,
     },
 };
 
@@ -30,11 +31,12 @@ async fn main() -> Result<(), Error> {
         .with_max_level(LevelFilter::DEBUG)
         .init();
     info!("开始收集往期双色球数据...");
-    let prize_record_page = collector::collect_business_data().await?;
+    let prize_record_page = collector::collect_business_data(None).await?;
     info!("往期双色球数据收集完成...");
-    let processors: Vec<Box<dyn Processor>> = vec![
+    let processors: Vec<Box<dyn Processor + Send>> = vec![
         Box::new(RelationshipProcessor),
         Box::new(BallOccurProcessor),
+        Box::new(create_summary_processor_chain()),
     ];
     let mut processor_chain = ProcessorChain::from(processors);
     info!("双色球分析链构建完成...");

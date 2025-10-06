@@ -11,19 +11,21 @@ use std::{
     marker::PhantomData,
     sync::{Arc, LazyLock},
 };
+use tokio::pin;
 
 pub mod context_obj;
 pub mod occur;
 pub mod relationship;
+pub mod summary;
 
 pub static BLUE_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<usize, BlueBallRelationship>>> =
     LazyLock::new(|| ContextAttr::new("BLUE_BALL_RELATIONSHIPS"));
 pub static RED_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<usize, RedBallRelationship>>> =
     LazyLock::new(|| ContextAttr::new("RED_BALL_RELATIONSHIPS"));
 
-pub static PRIZED_BLUE_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, BallOccurInfo>>> =
+pub static PRIZED_BLUE_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, Arc<BallOccurInfo>>>> =
     LazyLock::new(|| ContextAttr::new("PRIZED_BLUE_BALLS_OCCUR_INFO"));
-pub static PRIZED_RED_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, BallOccurInfo>>> =
+pub static PRIZED_RED_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, Arc<BallOccurInfo>>>> =
     LazyLock::new(|| ContextAttr::new("PRIZED_RED_BALLS_OCCUR_INFO"));
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -94,14 +96,21 @@ pub trait Processor {
     async fn execute(&mut self, context: &mut Context) -> Result<(), Error>;
 }
 
-#[derive(Default)]
 pub struct ProcessorChain {
-    processors: Vec<Box<dyn Processor>>,
+    name: String,
+    processors: Vec<Box<dyn Processor + Send>>,
 }
 
 impl ProcessorChain {
+    pub fn new(name: impl Borrow<str>) -> Self {
+        Self {
+            name: name.borrow().to_owned(),
+            processors: Default::default(),
+        }
+    }
+
     /// Add a processor to the chain
-    pub fn add_processor(&mut self, processor: Box<dyn Processor>) {
+    pub fn add_processor(&mut self, processor: Box<dyn Processor + Send>) {
         self.processors.push(processor);
     }
 
@@ -115,8 +124,23 @@ impl ProcessorChain {
     }
 }
 
-impl From<Vec<Box<dyn Processor>>> for ProcessorChain {
-    fn from(processors: Vec<Box<dyn Processor>>) -> Self {
-        Self { processors }
+impl From<Vec<Box<dyn Processor + Send>>> for ProcessorChain {
+    fn from(processors: Vec<Box<dyn Processor + Send>>) -> Self {
+        Self {
+            processors,
+            name: "ProcessorChain".to_string(),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl Processor for ProcessorChain {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    async fn execute(&mut self, context: &mut Context) -> Result<(), Error> {
+        pin!(self);
+        self.execute(context).await
     }
 }

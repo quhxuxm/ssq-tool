@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use tracing::debug;
 
@@ -90,16 +90,16 @@ impl Processor for BallOccurProcessor {
                     .min()
                     .copied()
                     .unwrap_or(0usize);
-                let average_interval = (occur_info.intervals().iter().sum::<usize>() as f64)
-                    / (occur_info.occur_count() as f64);
+                let average_interval =
+                    occur_info.intervals().iter().sum::<usize>() / occur_info.occur_count();
                 let average_occur_possibility =
-                    (occur_info.occur_count() as f64) / average_interval;
+                    (occur_info.occur_count() as f64) / (average_interval as f64);
                 occur_info.set_max_interval(max_interval);
                 occur_info.set_min_interval(min_interval);
                 occur_info.set_average_interval(average_interval);
                 occur_info.set_average_occur_possibility(average_occur_possibility);
                 occur_info.set_possible_next_occur_index(
-                    (occur_info.last_occur_index() as f64) - average_interval,
+                    (occur_info.last_occur_index() as isize) - (average_interval as isize),
                 );
             });
         });
@@ -117,22 +117,30 @@ impl Processor for BallOccurProcessor {
                     .min()
                     .copied()
                     .unwrap_or(0usize);
-                let average_interval = (occur_info.intervals().iter().sum::<usize>() as f64)
-                    / (occur_info.occur_count() as f64);
+                let average_interval =
+                    occur_info.intervals().iter().sum::<usize>() / occur_info.occur_count();
                 let average_occur_possibility =
-                    (occur_info.occur_count() as f64) / average_interval;
+                    (occur_info.occur_count() as f64) / (average_interval as f64);
                 occur_info.set_max_interval(max_interval);
                 occur_info.set_min_interval(min_interval);
                 occur_info.set_average_interval(average_interval);
                 occur_info.set_average_occur_possibility(average_occur_possibility);
                 occur_info.set_possible_next_occur_index(
-                    (occur_info.last_occur_index() as f64) - average_interval,
+                    (occur_info.last_occur_index() as isize) - (average_interval as isize),
                 );
             });
         });
         debug!("蓝球出现情况：{:?}", blue_balls_occurs);
+        let blue_balls_occurs = blue_balls_occurs
+            .into_iter()
+            .map(|(k, v)| (k, Arc::new(v)))
+            .collect::<HashMap<usize, Arc<BallOccurInfo>>>();
         context.add_attribute(PRIZED_BLUE_BALLS_OCCUR_INFO.clone(), blue_balls_occurs);
         debug!("红球出现情况：{:?}", red_balls_occurs);
+        let red_balls_occurs = red_balls_occurs
+            .into_iter()
+            .map(|(k, v)| (k, Arc::new(v)))
+            .collect::<HashMap<usize, Arc<BallOccurInfo>>>();
         context.add_attribute(PRIZED_RED_BALLS_OCCUR_INFO.clone(), red_balls_occurs);
         Ok(())
     }
