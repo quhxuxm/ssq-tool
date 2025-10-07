@@ -19,77 +19,111 @@ impl Processor for BallOccurProcessor {
     }
 
     async fn execute(&mut self, context: &mut Context) -> Result<(), Error> {
-        let mut blue_balls_occur_indexes = HashMap::new();
-        (1..=16).for_each(|blue_ball| {
-            blue_balls_occur_indexes.insert(blue_ball, vec![]);
-        });
-        let mut red_balls_occur_indexes = HashMap::new();
-        (1..=33).for_each(|red_ball| {
-            red_balls_occur_indexes.insert(red_ball, vec![]);
-        });
+        let mut blue_balls_occur_indexes = HashMap::<usize, Vec<usize>>::new();
+        let mut red_balls_occur_indexes = HashMap::<usize, Vec<usize>>::new();
         context.prize_records.iter().for_each(|record| {
             blue_balls_occur_indexes
                 .entry(record.blue_ball())
                 .and_modify(|occur_indexes| {
                     occur_indexes.push(record.index());
-                });
+                })
+                .or_insert(vec![record.index()]);
             record.red_balls().iter().for_each(|red_ball| {
                 red_balls_occur_indexes
                     .entry(*red_ball)
                     .and_modify(|occur_indexes| {
                         occur_indexes.push(record.index());
-                    });
+                    })
+                    .or_insert(vec![record.index()]);
             });
         });
         debug!("蓝球出现索引：{:?}", blue_balls_occur_indexes);
         debug!("红球出现索引：{:?}", red_balls_occur_indexes);
-        let mut blue_balls_occurs = HashMap::new();
-        (1..=16).for_each(|blue_ball| {
-            blue_balls_occurs.insert(blue_ball, BallOccurInfo::new(blue_ball));
-        });
-        let mut red_balls_occurs = HashMap::new();
-        (1..=33).for_each(|red_ball| {
-            red_balls_occurs.insert(red_ball, BallOccurInfo::new(red_ball));
-        });
+        let mut blue_balls_occurs = HashMap::<usize, BallOccurInfo>::new();
+        let mut red_balls_occurs = HashMap::<usize, BallOccurInfo>::new();
         blue_balls_occur_indexes
             .iter()
             .for_each(|(ball, occur_indexes)| {
-                blue_balls_occurs.entry(*ball).and_modify(|occur_info| {
-                    let last_occur_index = occur_indexes.first().copied().unwrap_or(0);
-                    occur_info.set_last_occur_index(last_occur_index);
-                    occur_info.set_occur_count(occur_indexes.len());
-                    occur_indexes.windows(2).for_each(|two_occur_indexes| {
-                        occur_info.add_interval(two_occur_indexes[1] - two_occur_indexes[0]);
+                let last_occur_index = occur_indexes.first().copied().unwrap_or(usize::MAX);
+                blue_balls_occurs
+                    .entry(*ball)
+                    .and_modify(|occur_info| {
+                        occur_info.set_last_occur_index(last_occur_index);
+                        occur_info.set_occur_count(occur_indexes.len());
+                        if occur_indexes.len() < 2 {
+                            occur_info.add_interval(occur_indexes[0]);
+                        } else {
+                            occur_indexes.windows(2).for_each(|two_occur_indexes| {
+                                occur_info
+                                    .add_interval(two_occur_indexes[1] - two_occur_indexes[0]);
+                            });
+                        }
+                    })
+                    .or_insert_with(|| {
+                        let mut occur_info = BallOccurInfo::new(*ball);
+                        occur_info.set_last_occur_index(last_occur_index);
+                        occur_info.set_occur_count(occur_indexes.len());
+                        if occur_indexes.len() < 2 {
+                            occur_info.add_interval(occur_indexes[0]);
+                        } else {
+                            occur_indexes.windows(2).for_each(|two_occur_indexes| {
+                                occur_info
+                                    .add_interval(two_occur_indexes[1] - two_occur_indexes[0]);
+                            });
+                        }
+                        occur_info
                     });
-                });
             });
 
         red_balls_occur_indexes
             .iter()
             .for_each(|(ball, occur_indexes)| {
-                red_balls_occurs.entry(*ball).and_modify(|occur_info| {
-                    let last_occur_index = occur_indexes.first().copied().unwrap_or(0);
-                    occur_info.set_last_occur_index(last_occur_index);
-                    occur_info.set_occur_count(occur_indexes.len());
-                    occur_indexes.windows(2).for_each(|two_occur_indexes| {
-                        occur_info.add_interval(two_occur_indexes[1] - two_occur_indexes[0]);
+                let last_occur_index = occur_indexes.first().copied().unwrap_or(usize::MAX);
+                red_balls_occurs
+                    .entry(*ball)
+                    .and_modify(|occur_info| {
+                        occur_info.set_last_occur_index(last_occur_index);
+                        occur_info.set_occur_count(occur_indexes.len());
+                        if occur_indexes.len() < 2 {
+                            occur_info.add_interval(occur_indexes[0]);
+                        } else {
+                            occur_indexes.windows(2).for_each(|two_occur_indexes| {
+                                occur_info
+                                    .add_interval(two_occur_indexes[1] - two_occur_indexes[0]);
+                            });
+                        }
+                    })
+                    .or_insert_with(|| {
+                        let mut occur_info = BallOccurInfo::new(*ball);
+                        occur_info.set_last_occur_index(last_occur_index);
+                        occur_info.set_occur_count(occur_indexes.len());
+                        if occur_indexes.len() < 2 {
+                            occur_info.add_interval(occur_indexes[0]);
+                        } else {
+                            occur_indexes.windows(2).for_each(|two_occur_indexes| {
+                                occur_info
+                                    .add_interval(two_occur_indexes[1] - two_occur_indexes[0]);
+                            });
+                        }
+                        occur_info
                     });
-                });
             });
-        (1..=16).for_each(|blue_ball| {
+
+        let prized_blue_balls = blue_balls_occurs.keys().copied().collect::<Vec<usize>>();
+        prized_blue_balls.into_iter().for_each(|blue_ball| {
             blue_balls_occurs.entry(blue_ball).and_modify(|occur_info| {
                 let max_interval = occur_info
                     .intervals()
                     .iter()
                     .max()
                     .copied()
-                    .unwrap_or(0usize);
+                    .unwrap_or(usize::MAX);
                 let min_interval = occur_info
                     .intervals()
                     .iter()
                     .min()
                     .copied()
-                    .unwrap_or(0usize);
+                    .unwrap_or(usize::MAX);
                 let average_interval =
                     occur_info.intervals().iter().sum::<usize>() / occur_info.occur_count();
                 let average_occur_possibility =
@@ -103,7 +137,8 @@ impl Processor for BallOccurProcessor {
                 );
             });
         });
-        (1..=33).for_each(|red_ball| {
+        let prized_red_balls = red_balls_occurs.keys().copied().collect::<Vec<usize>>();
+        prized_red_balls.into_iter().for_each(|red_ball| {
             red_balls_occurs.entry(red_ball).and_modify(|occur_info| {
                 let max_interval = occur_info
                     .intervals()
