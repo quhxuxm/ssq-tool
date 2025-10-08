@@ -46,11 +46,12 @@ impl Processor for OccurBasedSummaryProcessor {
         Self::sort_ball_occurs(&mut most_possible_occur_red_balls);
 
         debug!("按照概率可能出现的红球是：{most_possible_occur_red_balls:?}");
-        let top_n_blue_balls = most_possible_occur_blue_balls
+        let mut top_n_blue_balls = most_possible_occur_blue_balls
             .iter()
             .take(5)
             .map(|occur_info| occur_info.ball())
             .collect::<Vec<usize>>();
+        top_n_blue_balls.sort();
         let mut top_6_red_balls = most_possible_occur_red_balls
             .iter()
             .take(6)
