@@ -12,7 +12,6 @@ use std::{
     sync::{Arc, LazyLock},
 };
 
-
 pub mod context_obj;
 pub mod occur;
 pub mod relationship;
@@ -27,6 +26,11 @@ pub static PRIZED_BLUE_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, Arc
     LazyLock::new(|| ContextAttr::new("PRIZED_BLUE_BALLS_OCCUR_INFO"));
 pub static PRIZED_RED_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, Arc<BallOccurInfo>>>> =
     LazyLock::new(|| ContextAttr::new("PRIZED_RED_BALLS_OCCUR_INFO"));
+
+pub static MOST_POSSIBLE_OCCUR_BLUE_BALLS: LazyLock<ContextAttr<Vec<Arc<BallOccurInfo>>>> =
+    LazyLock::new(|| ContextAttr::new("MOST_POSSIBLE_OCCUR_BLUE_BALLS"));
+pub static MOST_POSSIBLE_OCCUR_RED_BALLS: LazyLock<ContextAttr<Vec<Arc<BallOccurInfo>>>> =
+    LazyLock::new(|| ContextAttr::new("MOST_POSSIBLE_OCCUR_RED_BALLS"));
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ContextAttr<T>
@@ -110,7 +114,7 @@ impl ProcessorChain {
     }
 
     /// Add a processor to the chain
-    pub fn add_processor(mut self, processor: Box<dyn Processor + Send>)->Self {
+    pub fn add_processor(mut self, processor: Box<dyn Processor + Send>) -> Self {
         self.processors.push(processor);
         self
     }

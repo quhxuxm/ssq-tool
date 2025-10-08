@@ -2,6 +2,7 @@ use std::{cmp::Ordering, sync::Arc};
 
 use tracing::{debug, info};
 
+use crate::processor::{MOST_POSSIBLE_OCCUR_BLUE_BALLS, MOST_POSSIBLE_OCCUR_RED_BALLS};
 use crate::{
     error::Error,
     processor::{
@@ -50,14 +51,24 @@ impl Processor for OccurBasedSummaryProcessor {
             .take(5)
             .map(|occur_info| occur_info.ball())
             .collect::<Vec<usize>>();
-        let top_6_red_balls = most_possible_occur_red_balls
+        let mut top_6_red_balls = most_possible_occur_red_balls
             .iter()
             .take(6)
             .map(|occur_info| occur_info.ball())
             .collect::<Vec<usize>>();
+        top_6_red_balls.sort();
         top_n_blue_balls.iter().for_each(|blue| {
-            info!("蓝球：{blue}; 红球：{top_6_red_balls:?}");
+            info!("根据出现规律选出，蓝球：{blue}; 红球：{top_6_red_balls:?}");
         });
+
+        context.add_attribute(
+            MOST_POSSIBLE_OCCUR_BLUE_BALLS.clone(),
+            most_possible_occur_blue_balls,
+        );
+        context.add_attribute(
+            MOST_POSSIBLE_OCCUR_RED_BALLS.clone(),
+            most_possible_occur_red_balls,
+        );
         Ok(())
     }
 }

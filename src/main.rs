@@ -5,8 +5,8 @@ use tracing::{info, level_filters::LevelFilter};
 use crate::{
     error::Error,
     processor::{
-        Processor, ProcessorChain, occur::BallOccurProcessor, relationship::RelationshipProcessor,
-        summary::create_summary_processor_chain,
+        occur::BallOccurProcessor, relationship::RelationshipProcessor, summary::create_summary_processor_chain, Processor,
+        ProcessorChain,
     },
 };
 
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Error> {
         .with_level(true)
         .with_thread_names(true)
         .with_thread_ids(true)
-        .with_max_level(LevelFilter::DEBUG)
+        .with_max_level(LevelFilter::INFO)
         .init();
     info!("开始收集往期双色球数据...");
     let prize_record_page = collector::collect_business_data(None).await?;
