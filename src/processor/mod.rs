@@ -11,7 +11,7 @@ use std::{
     marker::PhantomData,
     sync::{Arc, LazyLock},
 };
-use tokio::pin;
+
 
 pub mod context_obj;
 pub mod occur;
@@ -110,8 +110,9 @@ impl ProcessorChain {
     }
 
     /// Add a processor to the chain
-    pub fn add_processor(&mut self, processor: Box<dyn Processor + Send>) {
+    pub fn add_processor(mut self, processor: Box<dyn Processor + Send>)->Self {
         self.processors.push(processor);
+        self
     }
 
     /// Execute all the processors in the chain
@@ -140,7 +141,6 @@ impl Processor for ProcessorChain {
     }
 
     async fn execute(&mut self, context: &mut Context) -> Result<(), Error> {
-        pin!(self);
         self.execute(context).await
     }
 }

@@ -5,8 +5,8 @@ use tracing::{debug, info};
 use crate::{
     error::Error,
     processor::{
-        Context, PRIZED_BLUE_BALLS_OCCUR_INFO, PRIZED_RED_BALLS_OCCUR_INFO, Processor,
-        context_obj::BallOccurInfo,
+        context_obj::BallOccurInfo, Context, Processor, PRIZED_BLUE_BALLS_OCCUR_INFO,
+        PRIZED_RED_BALLS_OCCUR_INFO,
     },
 };
 
@@ -29,17 +29,7 @@ impl Processor for OccurBasedSummaryProcessor {
             .values()
             .cloned()
             .collect::<Vec<Arc<BallOccurInfo>>>();
-        most_possible_occur_blue_balls.sort_by(|v1, v2| {
-            let ordering = v2
-                .possible_next_occur_index()
-                .cmp(&v1.possible_next_occur_index());
-            match ordering {
-                Ordering::Equal => v2
-                    .average_occur_possibility()
-                    .total_cmp(&v1.average_occur_possibility()),
-                other => other,
-            }
-        });
+        Self::sort_ball_occurs(&mut most_possible_occur_blue_balls);
         debug!("按照概率可能出现的蓝球是：{most_possible_occur_blue_balls:?}");
         let prized_red_balls_occur_info =
             context
@@ -52,17 +42,7 @@ impl Processor for OccurBasedSummaryProcessor {
             .values()
             .cloned()
             .collect::<Vec<Arc<BallOccurInfo>>>();
-        most_possible_occur_red_balls.sort_by(|v1, v2| {
-            let ordering = v2
-                .possible_next_occur_index()
-                .cmp(&v1.possible_next_occur_index());
-            match ordering {
-                Ordering::Equal => v2
-                    .average_occur_possibility()
-                    .total_cmp(&v1.average_occur_possibility()),
-                other => other,
-            }
-        });
+        Self::sort_ball_occurs(&mut most_possible_occur_red_balls);
 
         debug!("按照概率可能出现的红球是：{most_possible_occur_red_balls:?}");
         let top_n_blue_balls = most_possible_occur_blue_balls
@@ -79,5 +59,21 @@ impl Processor for OccurBasedSummaryProcessor {
             info!("蓝球：{blue}; 红球：{top_6_red_balls:?}");
         });
         Ok(())
+    }
+}
+
+impl OccurBasedSummaryProcessor {
+    fn sort_ball_occurs(most_possible_occur_balls: &mut [Arc<BallOccurInfo>]) {
+        most_possible_occur_balls.sort_by(|v1, v2| {
+            let ordering = v2
+                .possible_next_occur_index()
+                .cmp(&v1.possible_next_occur_index());
+            match ordering {
+                Ordering::Equal => v2
+                    .average_occur_possibility()
+                    .total_cmp(&v1.average_occur_possibility()),
+                other => other,
+            }
+        });
     }
 }

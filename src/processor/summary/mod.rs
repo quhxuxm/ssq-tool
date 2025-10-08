@@ -1,8 +1,10 @@
-use crate::processor::{ProcessorChain, summary::occur_based::OccurBasedSummaryProcessor};
-mod occur_based;
+use crate::processor::summary::relationship_based::RelationshipBasedProcessor;
+use crate::processor::{summary::occur_based::OccurBasedSummaryProcessor, ProcessorChain};
 
+mod occur_based;
+mod relationship_based;
 pub fn create_summary_processor_chain() -> ProcessorChain {
-    let mut processor_chain = ProcessorChain::new("SummaryProcessorChain");
-    processor_chain.add_processor(Box::new(OccurBasedSummaryProcessor));
-    processor_chain
+    ProcessorChain::new("SummaryProcessorChain")
+        .add_processor(Box::new(OccurBasedSummaryProcessor))
+        .add_processor(Box::new(RelationshipBasedProcessor))
 }
