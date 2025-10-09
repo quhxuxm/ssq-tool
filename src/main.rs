@@ -5,8 +5,8 @@ use tracing::{info, level_filters::LevelFilter};
 use crate::{
     error::Error,
     processor::{
-        occur::BallOccurProcessor, relationship::RelationshipProcessor, summary::create_summary_processor_chain, Processor,
-        ProcessorChain,
+        Processor, ProcessorChain, occur::BallOccurProcessor, relationship::RelationshipProcessor,
+        summary::create_summary_processor_chain,
     },
 };
 

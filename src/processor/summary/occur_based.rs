@@ -6,8 +6,8 @@ use crate::processor::{MOST_POSSIBLE_OCCUR_BLUE_BALLS, MOST_POSSIBLE_OCCUR_RED_B
 use crate::{
     error::Error,
     processor::{
-        context_obj::BallOccurInfo, Context, Processor, PRIZED_BLUE_BALLS_OCCUR_INFO,
-        PRIZED_RED_BALLS_OCCUR_INFO,
+        Context, PRIZED_BLUE_BALLS_OCCUR_INFO, PRIZED_RED_BALLS_OCCUR_INFO, Processor,
+        context_obj::BallOccurInfo,
     },
 };
 
@@ -70,6 +70,7 @@ impl Processor for OccurBasedSummaryProcessor {
             MOST_POSSIBLE_OCCUR_RED_BALLS.clone(),
             most_possible_occur_red_balls,
         );
+
         Ok(())
     }
 }

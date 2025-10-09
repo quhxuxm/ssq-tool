@@ -1,5 +1,5 @@
 use crate::processor::summary::relationship_based::RelationshipBasedProcessor;
-use crate::processor::{summary::occur_based::OccurBasedSummaryProcessor, ProcessorChain};
+use crate::processor::{ProcessorChain, summary::occur_based::OccurBasedSummaryProcessor};
 
 mod occur_based;
 mod relationship_based;
