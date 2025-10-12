@@ -1,0 +1,16 @@
+[package]
+name = "collector"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ssq-tool-domain = { path = "../domain", package = "domain" }
+serde_json = { workspace = true }
+reqwest = { workspace = true, features = ["cookies"] }
+thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_repr = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+tracing = { workspace = true }
+derive_more = { workspace = true, features = ["try_from"] }
+

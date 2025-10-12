@@ -1,12 +1,14 @@
+mod codec;
+
 use std::collections::HashMap;
 
-use super::date_codec;
-use super::prize_grade_codec;
-use super::u64_codec;
-use super::usize_codec;
-use super::vec_str_codec;
-use super::vec_usize_codec;
 use chrono::NaiveDate;
+use codec::date_codec;
+use codec::prize_grade_codec;
+
+use codec::red_balls_codec;
+use codec::usize_codec;
+use codec::vec_str_codec;
 use serde::{Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use serde_repr::Serialize_repr;
@@ -15,7 +17,7 @@ use serde_repr::Serialize_repr;
     Debug, Serialize_repr, Deserialize_repr, Hash, PartialEq, Eq, Clone, Copy, PartialOrd, Ord,
 )]
 #[repr(u8)]
-pub enum OfficialPrizeGradeType {
+pub(super) enum PrizeGradeType {
     Level1 = 1,
     Level2 = 2,
     Level3 = 3,
@@ -26,34 +28,35 @@ pub enum OfficialPrizeGradeType {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct OfficialPrizeRecordPage {
-    pub state: u8,
+pub(super) struct PrizePage {
+    #[serde(rename = "state")]
+    pub response_state: u8,
     pub message: String,
-    pub total: u64,
+    pub total: usize,
     #[serde(rename = "pageNum")]
-    pub page_num: u64,
+    pub page_num: usize,
     #[serde(rename = "pageNo")]
-    pub page_no: u64,
+    pub page_no: usize,
     #[serde(rename = "pageSize")]
-    pub page_size: u64,
+    pub page_size: usize,
     #[serde(rename = "Tflag")]
     pub t_flag: u8,
     #[serde(rename = "result")]
-    pub prize_records: Vec<OfficialPrizeRecord>,
+    pub prize_records: Vec<PrizeRecord>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct OfficialPrizeGrade {
+pub(super) struct PrizeGrade {
     #[serde(rename = "type")]
-    pub prize_type: OfficialPrizeGradeType,
-    #[serde(rename = "typenum", with = "u64_codec")]
-    pub prize_type_number: u64,
+    pub prize_type: PrizeGradeType,
+    #[serde(rename = "typenum", with = "usize_codec")]
+    pub prize_type_number: usize,
     #[serde(rename = "typemoney")]
     pub prize_type_money: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct OfficialPrizeRecord {
+pub(super) struct PrizeRecord {
     pub name: String,
     pub code: String,
     #[serde(rename = "detailsLink")]
@@ -63,23 +66,24 @@ pub struct OfficialPrizeRecord {
     #[serde(with = "date_codec")]
     pub date: NaiveDate,
     pub week: String,
-    #[serde(with = "vec_usize_codec")]
-    pub red: Vec<usize>,
+    #[serde(with = "red_balls_codec")]
+    pub red: [usize; 6],
     #[serde(with = "usize_codec")]
     pub blue: usize,
     #[serde(with = "usize_codec")]
     pub blue2: usize,
     pub sales: String,
-    pub poolmoney: String,
+    #[serde(rename = "poolmoney")]
+    pub pool_money: String,
     #[serde(with = "vec_str_codec")]
     pub content: Vec<String>,
-    #[serde(with = "u64_codec")]
-    pub addmoney: u64,
-    #[serde(with = "u64_codec")]
-    pub addmoney2: u64,
+    #[serde(rename = "addmoney", with = "usize_codec")]
+    pub add_money: usize,
+    #[serde(rename = "addmoney2", with = "usize_codec")]
+    pub add_money2: usize,
     pub msg: String,
     pub z2add: String,
     pub m2add: String,
     #[serde(rename = "prizegrades", with = "prize_grade_codec")]
-    pub prize_grades: HashMap<OfficialPrizeGradeType, OfficialPrizeGrade>,
+    pub prize_grades: HashMap<PrizeGradeType, PrizeGrade>,
 }

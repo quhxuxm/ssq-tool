@@ -13,7 +13,7 @@ where
     serializer.serialize_str(&s)
 }
 
-pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<usize>, D::Error>
+pub fn deserialize<'de, D>(deserializer: D) -> Result<[usize; 6], D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -22,5 +22,6 @@ where
         .split(",")
         .map(|v| v.parse::<usize>().unwrap_or(0))
         .collect::<Vec<usize>>();
-    Ok(items)
+    let array = [items[0], items[1], items[2], items[3], items[4], items[5]];
+    Ok(array)
 }

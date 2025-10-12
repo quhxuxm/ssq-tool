@@ -1,9 +1,8 @@
-use crate::{
-    domain::BusinessPrizeRecord,
-    error::Error,
-    processor::context_obj::{BallOccurInfo, BlueBallRelationship, RedBallRelationship},
-};
+use crate::context_obj::{OccurDetail, Relationship};
+use crate::error::Error;
 use async_trait;
+use ssq_tool_domain::{Ball, BlueBall, PrBusinessObj, RedBall};
+use std::any::type_name;
 use std::{
     any::Any,
     borrow::Borrow,
@@ -13,27 +12,22 @@ use std::{
 };
 
 pub mod context_obj;
+pub mod error;
 pub mod occur;
 pub mod relationship;
 pub mod summary;
 
-pub static BLUE_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<usize, BlueBallRelationship>>> =
-    LazyLock::new(|| ContextAttr::new("BLUE_BALL_RELATIONSHIPS"));
-pub static RED_BALL_RELATIONSHIPS: LazyLock<ContextAttr<HashMap<usize, RedBallRelationship>>> =
-    LazyLock::new(|| ContextAttr::new("RED_BALL_RELATIONSHIPS"));
+pub static BLUE_BALL_RELATIONSHIPS: LazyLock<
+    ProcessorContextAttr<HashMap<BlueBall, Relationship>>,
+> = LazyLock::new(|| ProcessorContextAttr::new("BLUE_BALL_RELATIONSHIPS"));
+pub static RED_BALL_RELATIONSHIPS: LazyLock<ProcessorContextAttr<HashMap<RedBall, Relationship>>> =
+    LazyLock::new(|| ProcessorContextAttr::new("RED_BALL_RELATIONSHIPS"));
 
-pub static PRIZED_BLUE_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, Arc<BallOccurInfo>>>> =
-    LazyLock::new(|| ContextAttr::new("PRIZED_BLUE_BALLS_OCCUR_INFO"));
-pub static PRIZED_RED_BALLS_OCCUR_INFO: LazyLock<ContextAttr<HashMap<usize, Arc<BallOccurInfo>>>> =
-    LazyLock::new(|| ContextAttr::new("PRIZED_RED_BALLS_OCCUR_INFO"));
-
-pub static MOST_POSSIBLE_OCCUR_BLUE_BALLS: LazyLock<ContextAttr<Vec<Arc<BallOccurInfo>>>> =
-    LazyLock::new(|| ContextAttr::new("MOST_POSSIBLE_OCCUR_BLUE_BALLS"));
-pub static MOST_POSSIBLE_OCCUR_RED_BALLS: LazyLock<ContextAttr<Vec<Arc<BallOccurInfo>>>> =
-    LazyLock::new(|| ContextAttr::new("MOST_POSSIBLE_OCCUR_RED_BALLS"));
+pub static BALL_OCCURS: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurDetail>>>> =
+    LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURS")));
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct ContextAttr<T>
+pub struct ProcessorContextAttr<T>
 where
     T: Any + Send + 'static,
 {
@@ -41,7 +35,7 @@ where
     _val_type: PhantomData<T>,
 }
 
-impl<T> ContextAttr<T>
+impl<T> ProcessorContextAttr<T>
 where
     T: Any + Send + 'static,
 {
@@ -54,40 +48,52 @@ where
 }
 
 /// The context of the processor and processor chain
-pub struct Context {
-    prize_records: Arc<Vec<BusinessPrizeRecord>>,
+
+const PROCESSOR_CONTEXT_ATTR_KEY_PREFIX: &str = "$__PROCESSOR_CTX_ATTR__$";
+pub struct ProcessorContext {
+    prize_records: Arc<Vec<PrBusinessObj>>,
+    result_size: usize,
     attributes: HashMap<String, Box<dyn Any + Send + 'static>>,
 }
 
-impl Context {
-    pub fn new(prize_records: Arc<Vec<BusinessPrizeRecord>>) -> Self {
+impl ProcessorContext {
+    pub fn new(prize_records: Arc<Vec<PrBusinessObj>>, result_size: usize) -> Self {
         Self {
             attributes: HashMap::new(),
+            result_size,
             prize_records,
         }
     }
 
-    pub fn attribute<T>(&self, name: &ContextAttr<T>) -> Option<&T>
+    pub fn get_attribute<T>(&self, name: &ProcessorContextAttr<T>) -> Option<&T>
     where
         T: Send + 'static,
     {
-        let ContextAttr { name, .. } = name;
-        match self.attributes.get(name).as_ref() {
+        let ProcessorContextAttr { name, .. } = name;
+        let attr_key = format!(
+            "{PROCESSOR_CONTEXT_ATTR_KEY_PREFIX}_{name}_[{}]",
+            type_name::<T>()
+        );
+        match self.attributes.get(&attr_key).as_ref() {
             Some(attr) => attr.downcast_ref::<T>(),
             None => None,
         }
     }
 
-    pub fn add_attribute<T>(
+    pub fn set_attribute<T>(
         &mut self,
-        name: ContextAttr<T>,
+        attr: &ProcessorContextAttr<T>,
         value: T,
     ) -> Option<Box<dyn Any + Send>>
     where
         T: Send + 'static,
     {
-        let ContextAttr { name, .. } = name;
-        self.attributes.insert(name, Box::new(value))
+        let ProcessorContextAttr { name, .. } = &attr;
+        let attr_key = format!(
+            "{PROCESSOR_CONTEXT_ATTR_KEY_PREFIX}_{name}_[{}]",
+            type_name::<T>()
+        );
+        self.attributes.insert(attr_key, Box::new(value))
     }
 }
 
@@ -97,7 +103,7 @@ pub trait Processor {
     fn name(&self) -> &str;
 
     /// Define the execut logic of the processor
-    async fn execute(&mut self, context: &mut Context) -> Result<(), Error>;
+    async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error>;
 }
 
 pub struct ProcessorChain {
@@ -120,7 +126,7 @@ impl ProcessorChain {
     }
 
     /// Execute all the processors in the chain
-    pub async fn execute(&mut self, context: &mut Context) -> Result<(), Error> {
+    pub async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
         for processor in self.processors.iter_mut() {
             println!("executing processor: {}", processor.name());
             processor.execute(context).await?;
@@ -144,7 +150,7 @@ impl Processor for ProcessorChain {
         &self.name
     }
 
-    async fn execute(&mut self, context: &mut Context) -> Result<(), Error> {
+    async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
         self.execute(context).await
     }
 }

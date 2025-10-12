@@ -1,14 +1,13 @@
 use std::{collections::HashMap, fmt};
 
+use crate::raw::{PrizeGrade, PrizeGradeType};
 use serde::{
-    Deserializer, Serializer,
-    de::{SeqAccess, Visitor},
+    de::{SeqAccess, Visitor}, Deserializer,
+    Serializer,
 };
 
-use crate::domain::{OfficialPrizeGrade, OfficialPrizeGradeType};
-
 pub fn serialize<S>(
-    data: &HashMap<OfficialPrizeGradeType, OfficialPrizeGrade>,
+    data: &HashMap<PrizeGradeType, PrizeGrade>,
     serializer: S,
 ) -> Result<S::Ok, S::Error>
 where
@@ -26,16 +25,14 @@ where
     serializer.serialize_str(&prize_grades_string)
 }
 
-pub fn deserialize<'de, D>(
-    deserializer: D,
-) -> Result<HashMap<OfficialPrizeGradeType, OfficialPrizeGrade>, D::Error>
+pub fn deserialize<'de, D>(deserializer: D) -> Result<HashMap<PrizeGradeType, PrizeGrade>, D::Error>
 where
     D: Deserializer<'de>,
 {
     struct PrizeGradeVisitor;
 
     impl<'de> Visitor<'de> for PrizeGradeVisitor {
-        type Value = HashMap<OfficialPrizeGradeType, OfficialPrizeGrade>;
+        type Value = HashMap<PrizeGradeType, PrizeGrade>;
 
         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter.write_str("a non-empty map of prize grade objects")
@@ -46,10 +43,10 @@ where
             V: SeqAccess<'de>,
         {
             let mut prize_grades = HashMap::new();
-            while let Some(prize_grade) = seq.next_element::<OfficialPrizeGrade>()? {
+            while let Some(prize_grade) = seq.next_element::<PrizeGrade>()? {
                 prize_grades.insert(
                     prize_grade.prize_type,
-                    OfficialPrizeGrade {
+                    PrizeGrade {
                         prize_type: prize_grade.prize_type,
                         prize_type_number: prize_grade.prize_type_number,
                         prize_type_money: prize_grade.prize_type_money,
