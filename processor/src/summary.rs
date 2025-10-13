@@ -1,9 +1,12 @@
 use crate::context_obj::Relationship;
-use crate::{error::Error, Processor, ProcessorContext, BALL_OCCURS, BLUE_BALL_RELATIONSHIPS};
+use crate::{
+    error::Error, Processor, ProcessorContext, SummaryRecord, BALL_OCCURS, BLUE_BALL_RELATIONSHIPS,
+    SUMMARIES,
+};
 use itertools::Itertools;
 use rand::prelude::SliceRandom;
 use ssq_tool_domain::{Ball, BlueBall, RedBall};
-use tracing::{debug, info};
+use tracing::debug;
 
 pub struct SummaryProcessor;
 
@@ -130,6 +133,7 @@ impl Processor for SummaryProcessor {
             .collect::<Vec<RedBall>>();
         debug!("候选红球：{result_red_balls:?}");
         let mut rng = rand::rng();
+        let mut summaries = Vec::new();
         result_blue_balls.into_iter().for_each(|blue_ball| {
             let mut candidate_red_balls = result_red_balls.clone();
             let blue_ball_relationship = blue_ball_relationship.get(&blue_ball);
@@ -158,9 +162,20 @@ impl Processor for SummaryProcessor {
                 .take(red_ball_num)
                 .sorted()
                 .collect::<Vec<RedBall>>();
-            info!("红球：{candidate_red_balls:?}；蓝球：{blue_ball}");
+            debug!("红球：{candidate_red_balls:?}；蓝球：{blue_ball}");
+            summaries.push(SummaryRecord::new(
+                blue_ball,
+                [
+                    candidate_red_balls[0],
+                    candidate_red_balls[1],
+                    candidate_red_balls[2],
+                    candidate_red_balls[3],
+                    candidate_red_balls[4],
+                    candidate_red_balls[5],
+                ],
+            ))
         });
-
+        context.set_attribute(&SUMMARIES, summaries);
         Ok(())
     }
 }

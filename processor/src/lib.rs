@@ -1,6 +1,7 @@
 use crate::context_obj::{OccurDetail, Relationship};
 use crate::error::Error;
 use async_trait;
+use derive_more::Display;
 use ssq_tool_domain::{Ball, BlueBall, PrBusinessObj, RedBall};
 use std::any::type_name;
 use std::{
@@ -10,6 +11,7 @@ use std::{
     marker::PhantomData,
     sync::{Arc, LazyLock},
 };
+use tracing::info;
 
 pub mod context_obj;
 pub mod error;
@@ -25,6 +27,33 @@ pub static RED_BALL_RELATIONSHIPS: LazyLock<ProcessorContextAttr<HashMap<RedBall
 
 pub static BALL_OCCURS: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurDetail>>>> =
     LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURS")));
+
+pub static SUMMARIES: LazyLock<ProcessorContextAttr<Vec<SummaryRecord>>> =
+    LazyLock::new(|| ProcessorContextAttr::new("SUMMARIES"));
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Display)]
+#[display("红球：{red_balls:?}; 蓝球：{blue_ball}")]
+pub struct SummaryRecord {
+    blue_ball: BlueBall,
+    red_balls: [RedBall; 6],
+}
+
+impl SummaryRecord {
+    pub fn new(blue_ball: BlueBall, red_balls: [RedBall; 6]) -> Self {
+        Self {
+            blue_ball,
+            red_balls,
+        }
+    }
+
+    pub fn blue_ball(&self) -> &BlueBall {
+        &self.blue_ball
+    }
+
+    pub fn red_ball(&self) -> &[RedBall] {
+        &self.red_balls
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ProcessorContextAttr<T>
@@ -128,7 +157,7 @@ impl ProcessorChain {
     /// Execute all the processors in the chain
     pub async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
         for processor in self.processors.iter_mut() {
-            println!("executing processor: {}", processor.name());
+            info!("executing processor: {}", processor.name());
             processor.execute(context).await?;
         }
         Ok(())

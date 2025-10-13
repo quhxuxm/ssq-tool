@@ -5,7 +5,7 @@ use ssq_tool_collector::Collector;
 use ssq_tool_processor::occur::OccurProcessor;
 use ssq_tool_processor::relationship::RelationshipProcessor;
 use ssq_tool_processor::summary::SummaryProcessor;
-use ssq_tool_processor::{Processor, ProcessorChain, ProcessorContext};
+use ssq_tool_processor::{Processor, ProcessorChain, ProcessorContext, SUMMARIES};
 use tracing::{info, level_filters::LevelFilter};
 
 pub mod error;
@@ -42,5 +42,11 @@ async fn main() -> Result<(), Error> {
     let mut context = ProcessorContext::new(Arc::new(prize_record_business_objs), 5);
     info!("开始分析双色球数据...");
     processor_chain.execute(&mut context).await?;
+    let summarise = context
+        .get_attribute(&SUMMARIES)
+        .ok_or(Error::NoSummarise)?;
+    summarise.iter().for_each(|record| {
+        println!("{record}");
+    });
     Ok(())
 }
