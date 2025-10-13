@@ -6,7 +6,7 @@ use crate::{
 use itertools::Itertools;
 use rand::prelude::SliceRandom;
 use ssq_tool_domain::{Ball, BlueBall, RedBall};
-use tracing::debug;
+use tracing::{debug, info};
 
 pub struct SummaryProcessor;
 
@@ -162,7 +162,7 @@ impl Processor for SummaryProcessor {
                 .take(red_ball_num)
                 .sorted()
                 .collect::<Vec<RedBall>>();
-            debug!("红球：{candidate_red_balls:?}；蓝球：{blue_ball}");
+            info!("红球：{candidate_red_balls:?}；蓝球：{blue_ball}");
             summaries.push(SummaryRecord::new(
                 blue_ball,
                 [

@@ -32,7 +32,7 @@ async fn main() -> Result<(), Error> {
         .with_level(true)
         // .with_thread_names(true)
         // .with_thread_ids(true)
-        .with_max_level(LevelFilter::INFO)
+        .with_max_level(LevelFilter::DEBUG)
         .init();
     info!("开始收集往期双色球数据...");
     let collector = Collector::Local;
