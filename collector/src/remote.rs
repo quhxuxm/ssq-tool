@@ -5,7 +5,7 @@ use reqwest::header;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::redirect::Policy;
 use ssq_tool_domain::PrBusinessObj;
-use tracing::trace;
+use tracing::{error, trace};
 
 const REMOTE_URL: &str = "https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice";
 
@@ -43,6 +43,9 @@ pub(super) async fn collect_from_network(
     });
     let response_body = remote_response.text().await?;
     trace!("远程响应数据：\n{response_body}");
+    if let Err(e) = std::fs::write("official_data.json", &response_body) {
+        error!("将远程响应数据写入到本地文件失败:{e}");
+    };
     let page = serde_json::from_str::<PrizePage>(&response_body)?;
     collect_business_obj(page, record_size_to_store)
 }
