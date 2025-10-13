@@ -11,7 +11,7 @@ use std::{
     marker::PhantomData,
     sync::{Arc, LazyLock},
 };
-use tracing::info;
+use tracing::debug;
 
 pub mod context_obj;
 pub mod error;
@@ -157,8 +157,9 @@ impl ProcessorChain {
     /// Execute all the processors in the chain
     pub async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
         for processor in self.processors.iter_mut() {
-            info!("executing processor: {}", processor.name());
+            debug!("开始执行: {}", processor.name());
             processor.execute(context).await?;
+            debug!("成功执行: {}", processor.name());
         }
         Ok(())
     }
