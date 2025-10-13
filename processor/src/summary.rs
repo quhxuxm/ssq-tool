@@ -29,7 +29,7 @@ impl Processor for SummaryProcessor {
         });
         let blue_ball_occurs = blue_ball_occurs;
 
-        // 最后出现序列号从大到小排列，截取前result size个元素
+        // 平均出现次数和实际出现次数的差值从大到小排列，截取前result size个元素
         let blue_ball_occurs_sorted_by_diff_of_occurrence = blue_ball_occurs
             .iter()
             .sorted_by(|v1, v2| {
