@@ -15,6 +15,7 @@ impl Processor for OccurProcessor {
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
         let mut balls_occur_seq = HashMap::<Ball, Vec<usize>>::new();
+        let total_prized_record_num = context.prize_records.len();
         context.prize_records.iter().for_each(|record| {
             balls_occur_seq
                 .entry(record.blue_ball.into())
@@ -53,18 +54,21 @@ impl Processor for OccurProcessor {
             };
 
             let average_interval = all_intervals.iter().sum::<usize>() / occurrence_count;
+            let count_base_on_average_interval = total_prized_record_num / (average_interval + 1);
             ball_occurs
                 .entry(*ball)
                 .and_modify(|occur_info| {
                     occur_info.set_occurrence_count(occurrence_count);
                     occur_info.set_average_interval(average_interval);
                     occur_info.set_latest_occur_seq(latest_occur_seq);
+                    occur_info.set_count_based_on_average_interval(count_base_on_average_interval);
                 })
                 .or_insert_with(|| {
                     let mut occur_info = OccurDetail::new();
                     occur_info.set_occurrence_count(occurrence_count);
                     occur_info.set_average_interval(average_interval);
                     occur_info.set_latest_occur_seq(latest_occur_seq);
+                    occur_info.set_count_based_on_average_interval(count_base_on_average_interval);
                     occur_info
                 });
         });

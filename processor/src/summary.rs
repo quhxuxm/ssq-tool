@@ -30,11 +30,17 @@ impl Processor for SummaryProcessor {
         let blue_ball_occurs = blue_ball_occurs;
 
         // 最后出现序列号从大到小排列，截取前result size个元素
-        let blue_ball_occurs_sorted_by_latest_occur_seq = blue_ball_occurs
+        let blue_ball_occurs_sorted_by_diff_of_occurrence = blue_ball_occurs
             .iter()
-            .sorted_by(|v1, v2| v2.1.latest_occur_seq().cmp(&v1.1.latest_occur_seq()))
+            .sorted_by(|v1, v2| {
+                let v2_diff = v2.1.count_based_on_average_interval() as isize
+                    - v2.1.occurrence_count() as isize;
+                let v1_diff = v1.1.count_based_on_average_interval() as isize
+                    - v1.1.occurrence_count() as isize;
+                v2_diff.cmp(&v1_diff)
+            })
             .take(context.result_size)
-            .inspect(|v| debug!("蓝球，按照最后出现序列号收集数据：{}, {:?}", v.0, v.1))
+            .inspect(|v| debug!("蓝球，按照出现次数差距收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
             .collect::<Vec<BlueBall>>();
         // 出现次数从大到小排列，截取前result size个元素
@@ -56,7 +62,7 @@ impl Processor for SummaryProcessor {
 
         let mut result_blue_balls = Vec::new();
         result_blue_balls.extend(blue_ball_occurs_sorted_by_average_interval);
-        result_blue_balls.extend(blue_ball_occurs_sorted_by_latest_occur_seq);
+        result_blue_balls.extend(blue_ball_occurs_sorted_by_diff_of_occurrence);
         result_blue_balls.extend(blue_ball_occurs_sorted_by_occurrence_count);
         let mut result_blue_balls = result_blue_balls
             .into_iter()
@@ -78,11 +84,17 @@ impl Processor for SummaryProcessor {
         let red_ball_occurs = red_ball_occurs;
 
         // 最后出现序列号从大到小排列，截取前result size个元素
-        let red_ball_occurs_sorted_by_latest_occur_seq = red_ball_occurs
+        let red_ball_occurs_sorted_by_diff_of_occurrence = red_ball_occurs
             .iter()
-            .sorted_by(|v1, v2| v2.1.latest_occur_seq().cmp(&v1.1.latest_occur_seq()))
+            .sorted_by(|v1, v2| {
+                let v2_diff = v2.1.count_based_on_average_interval() as isize
+                    - v2.1.occurrence_count() as isize;
+                let v1_diff = v1.1.count_based_on_average_interval() as isize
+                    - v1.1.occurrence_count() as isize;
+                v2_diff.cmp(&v1_diff)
+            })
             .take(red_ball_num)
-            .inspect(|v| debug!("红球，按照最后出现序列号收集数据：{}, {:?}", v.0, v.1))
+            .inspect(|v| debug!("红球，按照出现次数差距收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
             .collect::<Vec<RedBall>>();
         // 出现次数从大到小排列，截取前result size个元素
@@ -110,7 +122,7 @@ impl Processor for SummaryProcessor {
 
         let mut result_red_balls = Vec::new();
         result_red_balls.extend(red_ball_occurs_sorted_by_average_interval);
-        result_red_balls.extend(red_ball_occurs_sorted_by_latest_occur_seq);
+        result_red_balls.extend(red_ball_occurs_sorted_by_diff_of_occurrence);
         result_red_balls.extend(red_ball_occurs_sorted_by_occurrence_count);
         let result_red_balls = result_red_balls
             .into_iter()

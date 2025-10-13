@@ -5,7 +5,7 @@ use crate::{
 use ssq_tool_domain::{BlueBall, RedBall};
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
-use tracing::{debug, info};
+use tracing::debug;
 
 pub struct RelationshipProcessor;
 

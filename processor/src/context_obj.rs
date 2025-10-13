@@ -8,13 +8,14 @@ pub struct OccurDetail {
     average_interval: usize,
     occurrence_count: usize,
     latest_occur_seq: usize,
+    count_based_on_average_interval: usize,
 }
 
 impl OccurDetail {
     pub fn new() -> Self {
         Self {
             average_interval: 0,
-
+            count_based_on_average_interval: 0,
             occurrence_count: 0,
             latest_occur_seq: usize::MAX,
         }
@@ -42,6 +43,14 @@ impl OccurDetail {
 
     pub fn latest_occur_seq(&self) -> usize {
         self.latest_occur_seq
+    }
+
+    pub fn count_based_on_average_interval(&self) -> usize {
+        self.count_based_on_average_interval
+    }
+
+    pub fn set_count_based_on_average_interval(&mut self, count_based_on_average_interval: usize) {
+        self.count_based_on_average_interval = count_based_on_average_interval;
     }
 }
 
