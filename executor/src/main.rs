@@ -35,7 +35,7 @@ async fn main() -> Result<(), Error> {
         .with_max_level(LevelFilter::DEBUG)
         .init();
     info!("开始收集往期双色球数据...");
-    let collector = Collector::Local;
+    let collector = Collector::Remote;
     let prize_record_business_objs = collector.collect(None).await?;
     let mut processor_chain = generate_processor_chain();
     info!("双色球分析链构建完成...");
