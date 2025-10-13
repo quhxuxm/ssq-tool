@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::context_obj::OccurDetail;
 use crate::{error::Error, Processor, ProcessorContext, BALL_OCCURS};
 use ssq_tool_domain::Ball;
-use tracing::debug;
+use tracing::trace;
 
 pub struct OccurProcessor;
 
@@ -34,10 +34,10 @@ impl Processor for OccurProcessor {
         });
         balls_occur_seq.iter().for_each(|(k, v)| match k {
             Ball::Blue(ball) => {
-                debug!("红球 {ball} 出现索引：{v:?}");
+                trace!("红球 {ball} 出现索引：{v:?}");
             }
             Ball::Red(ball) => {
-                debug!("蓝球 {ball} 出现索引：{v:?}");
+                trace!("蓝球 {ball} 出现索引：{v:?}");
             }
         });
         let mut ball_occurs = HashMap::<Ball, OccurDetail>::new();
@@ -74,10 +74,10 @@ impl Processor for OccurProcessor {
         });
         ball_occurs.iter().for_each(|(k, v)| match k {
             Ball::Blue(ball) => {
-                debug!("蓝球：{ball}，出现信息：{v:?}")
+                trace!("蓝球：{ball}，出现信息：{v:?}")
             }
             Ball::Red(ball) => {
-                debug!("红球：{ball}，出现信息：{v:?}")
+                trace!("红球：{ball}，出现信息：{v:?}")
             }
         });
         context.set_attribute(&BALL_OCCURS, ball_occurs);

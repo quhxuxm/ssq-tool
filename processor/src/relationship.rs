@@ -5,7 +5,7 @@ use crate::{
 use ssq_tool_domain::{BlueBall, RedBall};
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
-use tracing::debug;
+use tracing::trace;
 
 pub struct RelationshipProcessor;
 
@@ -51,9 +51,9 @@ impl Processor for RelationshipProcessor {
                 });
             });
         });
-        debug!("蓝球相关性：{blue_ball_relationships:?}");
+        trace!("蓝球相关性：{blue_ball_relationships:?}");
         context.set_attribute(&BLUE_BALL_RELATIONSHIPS, blue_ball_relationships);
-        debug!("红球相关性：{red_ball_relationships:?}");
+        trace!("红球相关性：{red_ball_relationships:?}");
         context.set_attribute(&RED_BALL_RELATIONSHIPS, red_ball_relationships);
         Ok(())
     }
