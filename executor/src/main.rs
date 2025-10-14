@@ -1,5 +1,7 @@
 use std::sync::Arc;
-
+use actix_web::{web, App, HttpServer};
+use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
+use rmcp_actix_web::transport::StreamableHttpService;
 use crate::error::Error;
 use ssq_tool_collector::Collector;
 use ssq_tool_processor::occur::OccurProcessor;
@@ -7,8 +9,11 @@ use ssq_tool_processor::relationship::RelationshipProcessor;
 use ssq_tool_processor::summary::SummaryProcessor;
 use ssq_tool_processor::{Processor, ProcessorChain, ProcessorContext, SUMMARIES};
 use tracing::{info, level_filters::LevelFilter};
+use ssq_tool_domain::PrBusinessObj;
+use crate::service::occur_service::OccurMcpService;
 
 pub mod error;
+mod service;
 
 fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
@@ -48,5 +53,22 @@ async fn main() -> Result<(), Error> {
     summarise.iter().for_each(|record| {
         println!("{record}");
     });
+    Ok(())
+}
+
+async fn create_mcp_server(prize_record_business_objs:Vec<PrBusinessObj>)->Result<(), Error>{
+    let http_service = StreamableHttpService::builder()
+        .service_factory(Arc::new(|| Ok(OccurMcpService::new())))
+        .session_manager(Arc::new(LocalSessionManager::default()))
+        .stateful_mode(true)
+        .build();
+    HttpServer::new(move || {
+        App::new()
+            // Mount MCP service at custom path
+            .service(web::scope("/api/v1/mcp").service(http_service.clone().scope()))
+    })
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await?;
     Ok(())
 }

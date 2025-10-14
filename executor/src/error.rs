@@ -8,4 +8,6 @@ pub enum Error {
     Collector(#[from] ssq_tool_collector::error::Error),
     #[error("没有分析出最终结果")]
     NoSummarise,
+    #[error(transparent)]
+    IoFailure(#[from] std::io::Error),
 }
