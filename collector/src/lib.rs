@@ -49,7 +49,7 @@ fn collect_business_obj(
             week,
             ..
         } = prize_record;
-
+        let day = format!("星期{week}");
         let red_balls = [
             red[0].try_into()?,
             red[1].try_into()?,
@@ -65,7 +65,7 @@ fn collect_business_obj(
             date,
             blue_ball,
             red_balls,
-            week,
+            day,
         };
         business_objs.push(business_obj);
         seq += 1;

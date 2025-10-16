@@ -20,3 +20,4 @@ serde = { workspace = true, features = ["derive"] }
 tokio-stream = { workspace = true }
 tokio-util = { workspace = true }
 sse-stream = { workspace = true }
+chrono = { workspace = true }

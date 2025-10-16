@@ -237,7 +237,7 @@ pub struct PrBusinessObj {
     #[schemars(description = "中奖日期")]
     pub date: NaiveDate,
     #[schemars(description = "中奖星期")]
-    pub week: String,
+    pub day: String,
     #[schemars(description = "中奖蓝球")]
     pub blue_ball: BlueBall,
     #[schemars(description = "中奖红球")]
