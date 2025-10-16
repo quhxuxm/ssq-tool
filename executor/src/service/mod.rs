@@ -1,1 +1,1 @@
-pub mod occur_service;
+pub mod ssq_mcp_service;

@@ -1,19 +1,21 @@
-use std::sync::Arc;
+use crate::error::Error;
+use crate::service::ssq_mcp_service::SsqMcpService;
 use actix_web::{web, App, HttpServer};
 use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
 use rmcp_actix_web::transport::StreamableHttpService;
-use crate::error::Error;
 use ssq_tool_collector::Collector;
+use ssq_tool_domain::PrBusinessObj;
 use ssq_tool_processor::occur::OccurProcessor;
 use ssq_tool_processor::relationship::RelationshipProcessor;
 use ssq_tool_processor::summary::SummaryProcessor;
 use ssq_tool_processor::{Processor, ProcessorChain, ProcessorContext, SUMMARIES};
-use tracing::{info, level_filters::LevelFilter};
-use ssq_tool_domain::PrBusinessObj;
-use crate::service::occur_service::OccurMcpService;
+use std::sync::{Arc, OnceLock};
+use tracing::{error, info, level_filters::LevelFilter};
 
 pub mod error;
 mod service;
+
+static OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ: OnceLock<Vec<PrBusinessObj>> = OnceLock::new();
 
 fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
@@ -42,9 +44,27 @@ async fn main() -> Result<(), Error> {
     info!("开始收集往期双色球数据...");
     let collector = Collector::Remote;
     let prize_record_business_objs = collector.collect(None).await?;
+    OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ
+        .set(prize_record_business_objs)
+        .map_err(|_| {
+            error!("把往期双色球数据放进全局变量失败.");
+            Error::Other("把往期双色球数据放进全局变量失败.".to_string())
+        })?;
+    command_line().await?;
+    create_mcp_server().await?;
+    Ok(())
+}
+
+async fn command_line() -> Result<(), Error> {
     let mut processor_chain = generate_processor_chain();
     info!("双色球分析链构建完成...");
-    let mut context = ProcessorContext::new(Arc::new(prize_record_business_objs), 5);
+    let pr_bus_objs = OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ
+        .get()
+        .ok_or(Error::Other(
+            "无法从全局变量中取得往期双色球数据，执行命令行失败".to_string(),
+        ))?
+        .clone();
+    let mut context = ProcessorContext::new(&pr_bus_objs, 5);
     info!("开始分析双色球数据...");
     processor_chain.execute(&mut context).await?;
     let summarise = context
@@ -56,19 +76,27 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn create_mcp_server(prize_record_business_objs:Vec<PrBusinessObj>)->Result<(), Error>{
-    let http_service = StreamableHttpService::builder()
-        .service_factory(Arc::new(|| Ok(OccurMcpService::new())))
+async fn create_mcp_server() -> Result<(), Error> {
+    let service = Arc::new(|| {
+        let ssq_mcp_service = SsqMcpService::new(OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ.get().ok_or(
+            std::io::Error::other(
+                "无法从全局变量中取得往期双色球数据，创建 MCP 服务失败.".to_string(),
+            ),
+        )?);
+        Ok(ssq_mcp_service)
+    });
+    let ssq_mcp_service = StreamableHttpService::builder()
+        .service_factory(service.clone())
         .session_manager(Arc::new(LocalSessionManager::default()))
         .stateful_mode(true)
         .build();
     HttpServer::new(move || {
         App::new()
             // Mount MCP service at custom path
-            .service(web::scope("/api/v1/mcp").service(http_service.clone().scope()))
+            .service(web::scope("/ssq/mcp").service(ssq_mcp_service.clone().scope()))
     })
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await?;
+    .bind("127.0.0.1:20080")?
+    .run()
+    .await?;
     Ok(())
 }

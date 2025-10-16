@@ -10,4 +10,6 @@ pub enum Error {
     NoSummarise,
     #[error(transparent)]
     IoFailure(#[from] std::io::Error),
+    #[error("其他错误：{0}")]
+    Other(String),
 }

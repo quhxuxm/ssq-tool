@@ -79,14 +79,14 @@ where
 /// The context of the processor and processor chain
 
 const PROCESSOR_CONTEXT_ATTR_KEY_PREFIX: &str = "$__PROCESSOR_CTX_ATTR__$";
-pub struct ProcessorContext {
-    prize_records: Arc<Vec<PrBusinessObj>>,
+pub struct ProcessorContext<'a> {
+    prize_records: &'a [PrBusinessObj],
     result_size: usize,
     attributes: HashMap<String, Box<dyn Any + Send + 'static>>,
 }
 
-impl ProcessorContext {
-    pub fn new(prize_records: Arc<Vec<PrBusinessObj>>, result_size: usize) -> Self {
+impl<'a> ProcessorContext<'a> {
+    pub fn new(prize_records: &'a [PrBusinessObj], result_size: usize) -> Self {
         Self {
             attributes: HashMap::new(),
             result_size,
@@ -155,7 +155,7 @@ impl ProcessorChain {
     }
 
     /// Execute all the processors in the chain
-    pub async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
+    pub async fn execute<'a>(&mut self, context: &mut ProcessorContext<'a>) -> Result<(), Error> {
         for processor in self.processors.iter_mut() {
             debug!("开始执行: {}", processor.name());
             processor.execute(context).await?;

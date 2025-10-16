@@ -6,17 +6,17 @@ edition = "2024"
 [dependencies]
 ssq-tool-collector = { path = "../collector", package = "collector" }
 ssq-tool-processor = { path = "../processor", package = "processor" }
-ssq-tool-domain={path="../domain", package = "domain"}
+ssq-tool-domain = { path = "../domain", package = "domain" }
 tracing = { workspace = true }
 tokio = { workspace = true }
 tracing-subscriber = { workspace = true }
 tracing-appender = { workspace = true }
 thiserror = { workspace = true }
-rmcp = {workspace = true, features = ["server","base64"]}
-rmcp-actix-web = {workspace = true}
-actix-web = { workspace = true }
+rmcp = { workspace = true, features = ["server", "base64", "macros", "schemars"] }
+rmcp-actix-web = { workspace = true }
+actix-web = { workspace = true, features = ["macros"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
-serde = {workspace = true,features = ["derive"]}
-tokio-stream = {workspace = true}
-tokio-util = {workspace = true}
-sse-stream = {workspace = true}
+serde = { workspace = true, features = ["derive"] }
+tokio-stream = { workspace = true }
+tokio-util = { workspace = true }
+sse-stream = { workspace = true }

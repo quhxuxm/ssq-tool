@@ -46,8 +46,10 @@ fn collect_business_obj(
             date,
             red,
             blue,
+            week,
             ..
         } = prize_record;
+
         let red_balls = [
             red[0].try_into()?,
             red[1].try_into()?,
@@ -63,6 +65,7 @@ fn collect_business_obj(
             date,
             blue_ball,
             red_balls,
+            week,
         };
         business_objs.push(business_obj);
         seq += 1;
