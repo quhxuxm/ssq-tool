@@ -8,4 +8,3 @@ chrono = { workspace = true, features = ["serde"] }
 derive_more = { workspace = true, features = ["display", "try_from", "from"] }
 strum = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive"] }
-rmcp = { workspace = true, features = ["schemars"] }
