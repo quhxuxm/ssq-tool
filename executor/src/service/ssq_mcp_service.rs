@@ -60,7 +60,7 @@ where
         let prize_record_business_objs = self
             .prize_record_business_obj
             .iter()
-            .filter(|reocrd| reocrd.day.eq(&param.0.day))
+            .filter(|reocrd| reocrd.day.contains(&param.0.day))
             .collect::<Vec<&PrBusinessObj>>();
         let call_tool_result =
             CallToolResult::success(vec![Content::json(prize_record_business_objs)?]);
