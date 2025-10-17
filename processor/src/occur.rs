@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::context_obj::OccurDetail;
-use crate::{error::Error, Processor, ProcessorContext, BALL_OCCURS};
+use crate::{BALL_OCCURS, Processor, ProcessorContext, error::Error};
 use ssq_tool_domain::Ball;
 use tracing::trace;
 

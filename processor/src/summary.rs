@@ -1,7 +1,7 @@
 use crate::context_obj::Relationship;
 use crate::{
-    error::Error, Processor, ProcessorContext, SummaryRecord, BALL_OCCURS, BLUE_BALL_RELATIONSHIPS,
-    SUMMARIES,
+    BALL_OCCURS, BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, SUMMARIES, SummaryRecord,
+    error::Error,
 };
 use itertools::Itertools;
 use rand::prelude::SliceRandom;

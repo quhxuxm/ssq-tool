@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::service::ssq_mcp_service::SsqMcpService;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
 use rmcp_actix_web::transport::StreamableHttpService;
 use ssq_tool_collector::Collector;

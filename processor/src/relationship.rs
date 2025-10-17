@@ -1,6 +1,6 @@
 use crate::context_obj::Relationship;
 use crate::{
-    error::Error, Processor, ProcessorContext, BLUE_BALL_RELATIONSHIPS, RED_BALL_RELATIONSHIPS,
+    BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, RED_BALL_RELATIONSHIPS, error::Error,
 };
 use ssq_tool_domain::{BlueBall, RedBall};
 use std::collections::HashMap;

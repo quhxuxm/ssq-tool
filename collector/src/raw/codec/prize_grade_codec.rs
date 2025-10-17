@@ -2,8 +2,8 @@ use std::{collections::HashMap, fmt};
 
 use crate::raw::{PrizeGrade, PrizeGradeType};
 use serde::{
-    de::{SeqAccess, Visitor}, Deserializer,
-    Serializer,
+    Deserializer, Serializer,
+    de::{SeqAccess, Visitor},
 };
 
 pub fn serialize<S>(

@@ -11,7 +11,6 @@ pub struct OccurDetail {
 }
 
 impl OccurDetail {
-
     pub fn average_interval(&self) -> usize {
         self.average_interval
     }
@@ -85,8 +84,9 @@ impl Relationship {
 
     pub fn increase_relationship_with_blue(&mut self, target_ball: BlueBall) {
         if let Relationship::Red {
-                blue_ball_detail, ..
-            } = self {
+            blue_ball_detail, ..
+        } = self
+        {
             blue_ball_detail.entry(target_ball).and_modify(|count| {
                 *count += 1;
             });
