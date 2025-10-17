@@ -1,6 +1,5 @@
 use crate::context_obj::{OccurDetail, Relationship};
 use crate::error::Error;
-use async_trait;
 use derive_more::Display;
 use ssq_tool_domain::{Ball, BlueBall, PrBusinessObj, RedBall};
 use std::any::type_name;
@@ -76,9 +75,7 @@ where
     }
 }
 
-/// The context of the processor and processor chain
-
-const PROCESSOR_CONTEXT_ATTR_KEY_PREFIX: &str = "$__PROCESSOR_CTX_ATTR__$";
+static PROCESSOR_CONTEXT_ATTR_KEY_PREFIX: &str = "$__PROCESSOR_CTX_ATTR__$";
 pub struct ProcessorContext<'a> {
     prize_records: &'a [PrBusinessObj],
     result_size: usize,

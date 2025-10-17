@@ -64,7 +64,7 @@ impl Processor for OccurProcessor {
                     occur_info.set_count_based_on_average_interval(count_base_on_average_interval);
                 })
                 .or_insert_with(|| {
-                    let mut occur_info = OccurDetail::new();
+                    let mut occur_info = OccurDetail::default();
                     occur_info.set_occurrence_count(occurrence_count);
                     occur_info.set_average_interval(average_interval);
                     occur_info.set_latest_occur_seq(latest_occur_seq);

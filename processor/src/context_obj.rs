@@ -1,9 +1,8 @@
 use ssq_tool_domain::{BlueBall, RedBall};
 use std::collections::HashMap;
-use std::usize;
 use strum::IntoEnumIterator;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct OccurDetail {
     average_interval: usize,
     occurrence_count: usize,
@@ -12,14 +11,6 @@ pub struct OccurDetail {
 }
 
 impl OccurDetail {
-    pub fn new() -> Self {
-        Self {
-            average_interval: 0,
-            count_based_on_average_interval: 0,
-            occurrence_count: 0,
-            latest_occur_seq: usize::MAX,
-        }
-    }
 
     pub fn average_interval(&self) -> usize {
         self.average_interval
@@ -93,17 +84,12 @@ impl Relationship {
     }
 
     pub fn increase_relationship_with_blue(&mut self, target_ball: BlueBall) {
-        match self {
-            Relationship::Blue { .. } => {
-                return;
-            }
-            Relationship::Red {
+        if let Relationship::Red {
                 blue_ball_detail, ..
-            } => {
-                blue_ball_detail.entry(target_ball).and_modify(|count| {
-                    *count += 1;
-                });
-            }
+            } = self {
+            blue_ball_detail.entry(target_ball).and_modify(|count| {
+                *count += 1;
+            });
         }
     }
 

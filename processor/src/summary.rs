@@ -22,7 +22,7 @@ impl Processor for SummaryProcessor {
             .ok_or(Error::ContextAttrNotExist(BALL_OCCURS.name.clone()))?;
         let mut blue_ball_occurs = Vec::new();
         let mut red_ball_occurs = Vec::new();
-        ball_occurs.into_iter().for_each(|(k, v)| match k {
+        ball_occurs.iter().for_each(|(k, v)| match k {
             Ball::Blue(blue_ball) => {
                 blue_ball_occurs.push((*blue_ball, v));
             }
