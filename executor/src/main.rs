@@ -8,7 +8,7 @@ use ssq_tool_domain::PrBusinessObj;
 use ssq_tool_processor::occur::OccurProcessor;
 use ssq_tool_processor::relationship::RelationshipProcessor;
 use ssq_tool_processor::summary::SummaryProcessor;
-use ssq_tool_processor::{Processor, ProcessorChain, ProcessorContext, SUMMARIES};
+use ssq_tool_processor::{Processor, ProcessorChain, SUMMARIES, context::ProcessorContext};
 use std::sync::{Arc, OnceLock};
 use tracing::{error, info, level_filters::LevelFilter};
 

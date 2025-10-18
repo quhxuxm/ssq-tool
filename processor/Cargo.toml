@@ -9,7 +9,7 @@ async-trait = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 itertools = { workspace = true }
-derive_more = { workspace = true }
+derive_more = { workspace = true, features = ["display"]}
 strum = { workspace = true }
 rand = { workspace = true }
 

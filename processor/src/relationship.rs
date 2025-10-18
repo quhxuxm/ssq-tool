@@ -1,4 +1,4 @@
-use crate::context_obj::Relationship;
+use crate::context::Relationship;
 use crate::{
     BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, RED_BALL_RELATIONSHIPS, error::Error,
 };
@@ -24,7 +24,7 @@ impl Processor for RelationshipProcessor {
         RedBall::iter().for_each(|red_ball| {
             red_ball_relationships.insert(red_ball, Relationship::new_red(red_ball));
         });
-        context.prize_records.iter().for_each(|prized_ball| {
+        context.get_prize_records().iter().for_each(|prized_ball| {
             let prize_blue_ball = prized_ball.blue_ball;
             let prize_red_balls = prized_ball.red_balls;
             blue_ball_relationships

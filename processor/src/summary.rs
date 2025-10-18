@@ -1,4 +1,4 @@
-use crate::context_obj::Relationship;
+use crate::context::Relationship;
 use crate::{
     BALL_OCCURS, BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, SUMMARIES, SummaryRecord,
     error::Error,
@@ -19,7 +19,7 @@ impl Processor for SummaryProcessor {
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
         let ball_occurs = context
             .get_attribute(&BALL_OCCURS)
-            .ok_or(Error::ContextAttrNotExist(BALL_OCCURS.name.clone()))?;
+            .ok_or(Error::ContextAttrNotExist(BALL_OCCURS.to_string()))?;
         let mut blue_ball_occurs = Vec::new();
         let mut red_ball_occurs = Vec::new();
         ball_occurs.iter().for_each(|(k, v)| match k {
@@ -36,29 +36,32 @@ impl Processor for SummaryProcessor {
         let blue_ball_occurs_sorted_by_diff_of_occurrence = blue_ball_occurs
             .iter()
             .sorted_by(|v1, v2| {
-                let v2_diff = v2.1.count_based_on_average_interval() as isize
-                    - v2.1.occurrence_count() as isize;
-                let v1_diff = v1.1.count_based_on_average_interval() as isize
-                    - v1.1.occurrence_count() as isize;
+                let v2_diff = v2.1.occurance_count_by_average_interval() as isize
+                    - v2.1.occurrence_count_by_official_data() as isize;
+                let v1_diff = v1.1.occurance_count_by_average_interval() as isize
+                    - v1.1.occurrence_count_by_official_data() as isize;
                 v2_diff.cmp(&v1_diff)
             })
-            .take(context.result_size)
+            .take(context.expect_result_size())
             .inspect(|v| debug!("蓝球，按照出现次数差距收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
             .collect::<Vec<BlueBall>>();
         // 出现次数从大到小排列，截取前result size个元素
         let blue_ball_occurs_sorted_by_occurrence_count = blue_ball_occurs
             .iter()
-            .sorted_by(|v1, v2| v2.1.occurrence_count().cmp(&v1.1.occurrence_count()))
-            .take(context.result_size)
+            .sorted_by(|v1, v2| {
+                v2.1.occurrence_count_by_official_data()
+                    .cmp(&v1.1.occurrence_count_by_official_data())
+            })
+            .take(context.expect_result_size())
             .inspect(|v| debug!("蓝球，按照出现次数收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
             .collect::<Vec<BlueBall>>();
         // 出现平均间隔从小到大排列，截取前result size个元素
         let blue_ball_occurs_sorted_by_average_interval = blue_ball_occurs
             .iter()
-            .sorted_by_key(|v| v.1.average_interval())
-            .take(context.result_size)
+            .sorted_by_key(|v| v.1.average_occur_interval())
+            .take(context.expect_result_size())
             .inspect(|v| debug!("蓝球，按照平均出现间隔收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
             .collect::<Vec<BlueBall>>();
@@ -76,7 +79,7 @@ impl Processor for SummaryProcessor {
         result_blue_balls.shuffle(&mut rng);
         let result_blue_balls = result_blue_balls
             .into_iter()
-            .take(context.result_size)
+            .take(context.expect_result_size())
             .sorted()
             .collect::<Vec<BlueBall>>();
 
@@ -90,10 +93,10 @@ impl Processor for SummaryProcessor {
         let red_ball_occurs_sorted_by_diff_of_occurrence = red_ball_occurs
             .iter()
             .sorted_by(|v1, v2| {
-                let v2_diff = v2.1.count_based_on_average_interval() as isize
-                    - v2.1.occurrence_count() as isize;
-                let v1_diff = v1.1.count_based_on_average_interval() as isize
-                    - v1.1.occurrence_count() as isize;
+                let v2_diff = v2.1.occurance_count_by_average_interval() as isize
+                    - v2.1.occurrence_count_by_official_data() as isize;
+                let v1_diff = v1.1.occurance_count_by_average_interval() as isize
+                    - v1.1.occurrence_count_by_official_data() as isize;
                 v2_diff.cmp(&v1_diff)
             })
             .take(red_ball_num)
@@ -103,7 +106,10 @@ impl Processor for SummaryProcessor {
         // 出现次数从大到小排列，截取前result size个元素
         let red_ball_occurs_sorted_by_occurrence_count = red_ball_occurs
             .iter()
-            .sorted_by(|v1, v2| v2.1.occurrence_count().cmp(&v1.1.occurrence_count()))
+            .sorted_by(|v1, v2| {
+                v2.1.occurrence_count_by_official_data()
+                    .cmp(&v1.1.occurrence_count_by_official_data())
+            })
             .take(red_ball_num)
             .inspect(|v| debug!("红球，按照出现次数收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
@@ -111,7 +117,7 @@ impl Processor for SummaryProcessor {
         // 出现平均间隔从小到大排列，截取前result size个元素
         let red_ball_occurs_sorted_by_average_interval = red_ball_occurs
             .iter()
-            .sorted_by_key(|v| v.1.average_interval())
+            .sorted_by_key(|v| v.1.average_occur_interval())
             .take(red_ball_num)
             .inspect(|v| debug!("红球，按照平均出现间隔收集数据：{}, {:?}", v.0, v.1))
             .map(|v| v.0)
@@ -120,7 +126,7 @@ impl Processor for SummaryProcessor {
             context
                 .get_attribute(&BLUE_BALL_RELATIONSHIPS)
                 .ok_or(Error::ContextAttrNotExist(
-                    BLUE_BALL_RELATIONSHIPS.name.clone(),
+                    BLUE_BALL_RELATIONSHIPS.to_string(),
                 ))?;
 
         let mut result_red_balls = Vec::new();

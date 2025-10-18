@@ -1,18 +1,15 @@
-use crate::context_obj::{OccurDetail, Relationship};
+use crate::context::{OccurDetail, ProcessorContext, ProcessorContextAttr, Relationship};
 use crate::error::Error;
 use derive_more::Display;
-use ssq_tool_domain::{Ball, BlueBall, PrBusinessObj, RedBall};
-use std::any::type_name;
+use ssq_tool_domain::{Ball, BlueBall, RedBall};
 use std::{
-    any::Any,
     borrow::Borrow,
     collections::HashMap,
-    marker::PhantomData,
     sync::{Arc, LazyLock},
 };
 use tracing::debug;
 
-pub mod context_obj;
+pub mod context;
 pub mod error;
 pub mod occur;
 pub mod relationship;
@@ -51,75 +48,6 @@ impl SummaryRecord {
 
     pub fn red_ball(&self) -> &[RedBall] {
         &self.red_balls
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct ProcessorContextAttr<T>
-where
-    T: Any + Send + 'static,
-{
-    name: String,
-    _val_type: PhantomData<T>,
-}
-
-impl<T> ProcessorContextAttr<T>
-where
-    T: Any + Send + 'static,
-{
-    pub fn new(name: impl Borrow<str>) -> Self {
-        Self {
-            name: name.borrow().to_owned(),
-            _val_type: PhantomData,
-        }
-    }
-}
-
-static PROCESSOR_CONTEXT_ATTR_KEY_PREFIX: &str = "$__PROCESSOR_CTX_ATTR__$";
-pub struct ProcessorContext<'a> {
-    prize_records: &'a [PrBusinessObj],
-    result_size: usize,
-    attributes: HashMap<String, Box<dyn Any + Send + 'static>>,
-}
-
-impl<'a> ProcessorContext<'a> {
-    pub fn new(prize_records: &'a [PrBusinessObj], result_size: usize) -> Self {
-        Self {
-            attributes: HashMap::new(),
-            result_size,
-            prize_records,
-        }
-    }
-
-    pub fn get_attribute<T>(&self, name: &ProcessorContextAttr<T>) -> Option<&T>
-    where
-        T: Send + 'static,
-    {
-        let ProcessorContextAttr { name, .. } = name;
-        let attr_key = format!(
-            "{PROCESSOR_CONTEXT_ATTR_KEY_PREFIX}_{name}_[{}]",
-            type_name::<T>()
-        );
-        match self.attributes.get(&attr_key).as_ref() {
-            Some(attr) => attr.downcast_ref::<T>(),
-            None => None,
-        }
-    }
-
-    pub fn set_attribute<T>(
-        &mut self,
-        attr: &ProcessorContextAttr<T>,
-        value: T,
-    ) -> Option<Box<dyn Any + Send>>
-    where
-        T: Send + 'static,
-    {
-        let ProcessorContextAttr { name, .. } = &attr;
-        let attr_key = format!(
-            "{PROCESSOR_CONTEXT_ATTR_KEY_PREFIX}_{name}_[{}]",
-            type_name::<T>()
-        );
-        self.attributes.insert(attr_key, Box::new(value))
     }
 }
 
