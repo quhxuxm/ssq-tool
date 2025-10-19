@@ -1,6 +1,8 @@
-use crate::context::{OccurrenceDetail, ProcessorContext, ProcessorContextAttr, Relationship};
+use crate::context::{OccurrenceDetail, ProcessorContext, ProcessorContextAttr};
 use crate::error::Error;
 use derive_more::Display;
+
+use ::fp_growth::algorithm::FPResult;
 use ssq_tool_domain::{Ball, BlueBall, RedBall};
 use std::{
     borrow::Borrow,
@@ -9,32 +11,32 @@ use std::{
 };
 use tracing::debug;
 
+pub mod ball_occurrence;
+pub mod ball_relationship_fp;
+pub mod blue_ball_occurrence_fp;
 pub mod context;
 pub mod error;
-pub mod prepare;
+pub mod final_result;
 
-pub mod summary;
-
-pub static BLUE_BALL_RELATIONSHIPS: LazyLock<
-    ProcessorContextAttr<HashMap<BlueBall, Relationship>>,
-> = LazyLock::new(|| ProcessorContextAttr::new("BLUE_BALL_RELATIONSHIPS"));
-pub static RED_BALL_RELATIONSHIPS: LazyLock<ProcessorContextAttr<HashMap<RedBall, Relationship>>> =
-    LazyLock::new(|| ProcessorContextAttr::new("RED_BALL_RELATIONSHIPS"));
-
-pub static BALL_OCCURS: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurrenceDetail>>>> =
-    LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURS")));
-
-pub static SUMMARIES: LazyLock<ProcessorContextAttr<Vec<SummaryResult>>> =
-    LazyLock::new(|| ProcessorContextAttr::new("SUMMARIES"));
+pub static BALL_OCCURRENCE: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurrenceDetail>>>> =
+    LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURRENCE")));
+pub static BALL_RELATIONSHIP_FP: LazyLock<
+    ProcessorContextAttr<HashMap<BlueBall, FPResult<RedBall>>>,
+> = LazyLock::new(|| ProcessorContextAttr::new("BALL_RELATIONSHIP_FP_RESULT"));
+pub static BLUE_BALL_OCCURRENCE_FP: LazyLock<ProcessorContextAttr<FPResult<BlueBall>>> =
+    LazyLock::new(|| ProcessorContextAttr::new("BLUR_BALL_OCCURRENCE_FP_RESULT"));
+pub static FINAL_PROCESSOR_CHAIN_RESULTS: LazyLock<
+    ProcessorContextAttr<Vec<FinalProcessorChainResult>>,
+> = LazyLock::new(|| ProcessorContextAttr::new("CUSTOMIZE_SUMMARIES"));
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Display)]
 #[display("红球：{red_balls:?}; 蓝球：{blue_ball}")]
-pub struct SummaryResult {
+pub struct FinalProcessorChainResult {
     blue_ball: BlueBall,
     red_balls: [RedBall; 6],
 }
 
-impl SummaryResult {
+impl FinalProcessorChainResult {
     pub fn new(blue_ball: BlueBall, red_balls: [RedBall; 6]) -> Self {
         Self {
             blue_ball,

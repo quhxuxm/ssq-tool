@@ -5,10 +5,13 @@ use rmcp::transport::streamable_http_server::session::local::LocalSessionManager
 use rmcp_actix_web::transport::StreamableHttpService;
 use ssq_tool_collector::Collector;
 use ssq_tool_domain::PrBusinessObj;
-use ssq_tool_processor::prepare::occurrence::OccurrenceProcessor;
-use ssq_tool_processor::prepare::relationship::RelationshipProcessor;
-use ssq_tool_processor::summary::customize::CustomizeSummaryProcessor;
-use ssq_tool_processor::{context::ProcessorContext, Processor, ProcessorChain, SUMMARIES};
+use ssq_tool_processor::ball_occurrence::BallOccurrenceProcessor;
+use ssq_tool_processor::ball_relationship_fp::BallRelationshipFpProcessor;
+use ssq_tool_processor::blue_ball_occurrence_fp::BlueBallOccurrenceFpProcessor;
+use ssq_tool_processor::final_result::FinalResultsProcessor;
+use ssq_tool_processor::{
+    context::ProcessorContext, Processor, ProcessorChain, FINAL_PROCESSOR_CHAIN_RESULTS,
+};
 use std::sync::{Arc, OnceLock};
 use tracing::{error, info, level_filters::LevelFilter};
 
@@ -19,9 +22,10 @@ static OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ: OnceLock<Vec<PrBusinessObj>> = OnceLo
 
 fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
-        Box::new(RelationshipProcessor),
-        Box::new(OccurrenceProcessor),
-        Box::new(CustomizeSummaryProcessor),
+        Box::new(BallOccurrenceProcessor),
+        Box::new(BallRelationshipFpProcessor::new(10)),
+        Box::new(BlueBallOccurrenceFpProcessor::new(150, 5)),
+        Box::new(FinalResultsProcessor),
     ];
     ProcessorChain::from(processors)
 }
@@ -67,10 +71,10 @@ async fn command_line() -> Result<(), Error> {
     let mut context = ProcessorContext::new(&pr_bus_objs, 5);
     info!("开始分析双色球数据...");
     processor_chain.execute(&mut context).await?;
-    let summarise = context
-        .get_attribute(&SUMMARIES)
-        .ok_or(Error::NoSummarise)?;
-    summarise.iter().for_each(|record| {
+    let final_processor_chain_results = context
+        .get_attribute(&FINAL_PROCESSOR_CHAIN_RESULTS)
+        .ok_or(Error::NoFinalProcessorChainResults)?;
+    final_processor_chain_results.iter().for_each(|record| {
         println!("{record}");
     });
     Ok(())

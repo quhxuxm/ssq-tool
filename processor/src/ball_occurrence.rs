@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 
 use crate::context::OccurrenceDetail;
-use crate::{error::Error, Processor, ProcessorContext, BALL_OCCURS};
+use crate::{error::Error, Processor, ProcessorContext, BALL_OCCURRENCE};
 use ssq_tool_domain::Ball;
 use tracing::trace;
 
-pub struct OccurrenceProcessor;
+pub struct BallOccurrenceProcessor;
 
 #[async_trait::async_trait]
-impl Processor for OccurrenceProcessor {
+impl Processor for BallOccurrenceProcessor {
     fn name(&self) -> &str {
-        "OccurrenceProcessor"
+        "BallOccurrenceProcessor"
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
@@ -80,7 +80,7 @@ impl Processor for OccurrenceProcessor {
                     occur_info
                 });
         });
-        context.set_attribute(&BALL_OCCURS, ball_occurs);
+        context.set_attribute(&BALL_OCCURRENCE, ball_occurs);
         Ok(())
     }
 }
