@@ -12,4 +12,5 @@ itertools = { workspace = true }
 derive_more = { workspace = true, features = ["display"]}
 strum = { workspace = true }
 rand = { workspace = true }
+serde={workspace = true, features = ["derive"]}
 

@@ -1,4 +1,5 @@
 use derive_more::Display;
+use serde::{Deserialize, Serialize};
 use ssq_tool_domain::{BlueBall, PrBusinessObj, RedBall};
 use std::{
     any::{Any, type_name},
@@ -87,11 +88,16 @@ impl<'a> ProcessorContext<'a> {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename = "出现细节")]
 pub struct OccurDetail {
+    #[serde(rename = "平均出现间隔")]
     average_occur_interval: usize,
+    #[serde(rename = "官方数据中的出现次数")]
     occurrence_count_by_official_data: usize,
+    #[serde(rename = "最后一次出现的索引")]
     latest_occur_seq: usize,
+    #[serde(rename = "按照平均出现间隔计算的出现次数")]
     occurrence_count_by_average_interval: usize,
 }
 

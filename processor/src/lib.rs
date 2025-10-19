@@ -24,17 +24,17 @@ pub static RED_BALL_RELATIONSHIPS: LazyLock<ProcessorContextAttr<HashMap<RedBall
 pub static BALL_OCCURS: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurDetail>>>> =
     LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURS")));
 
-pub static SUMMARIES: LazyLock<ProcessorContextAttr<Vec<SummaryRecord>>> =
+pub static SUMMARIES: LazyLock<ProcessorContextAttr<Vec<SummaryResult>>> =
     LazyLock::new(|| ProcessorContextAttr::new("SUMMARIES"));
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Display)]
 #[display("红球：{red_balls:?}; 蓝球：{blue_ball}")]
-pub struct SummaryRecord {
+pub struct SummaryResult {
     blue_ball: BlueBall,
     red_balls: [RedBall; 6],
 }
 
-impl SummaryRecord {
+impl SummaryResult {
     pub fn new(blue_ball: BlueBall, red_balls: [RedBall; 6]) -> Self {
         Self {
             blue_ball,

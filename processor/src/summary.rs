@@ -1,6 +1,6 @@
 use crate::context::Relationship;
 use crate::{
-    BALL_OCCURS, BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, SUMMARIES, SummaryRecord,
+    BALL_OCCURS, BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, SUMMARIES, SummaryResult,
     error::Error,
 };
 use itertools::Itertools;
@@ -36,6 +36,9 @@ impl Processor for SummaryProcessor {
         let blue_ball_occurs_sorted_by_diff_of_occurrence = blue_ball_occurs
             .iter()
             .sorted_by(|v1, v2| {
+                // 以平均出现间隔估算应该出现的次数去比较实
+                // 际出现次数来评估实际出现次数是否合理，在
+                // 合理的情况下，二者应接近。
                 let v2_diff = v2.1.occurance_count_by_average_interval() as isize
                     - v2.1.occurrence_count_by_official_data() as isize;
                 let v1_diff = v1.1.occurance_count_by_average_interval() as isize
@@ -169,7 +172,7 @@ impl Processor for SummaryProcessor {
                 .sorted()
                 .collect::<Vec<RedBall>>();
             info!("红球：{candidate_red_balls:?}；蓝球：{blue_ball}");
-            summaries.push(SummaryRecord::new(
+            summaries.push(SummaryResult::new(
                 blue_ball,
                 [
                     candidate_red_balls[0],

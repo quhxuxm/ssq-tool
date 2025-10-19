@@ -4,6 +4,10 @@ use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::{CallToolResult, Content, ServerCapabilities, ServerInfo};
 use rmcp::{ErrorData, ServerHandler, schemars, tool, tool_handler, tool_router};
 use ssq_tool_domain::PrBusinessObj;
+use ssq_tool_processor::context::ProcessorContext;
+use ssq_tool_processor::occur::OccurProcessor;
+use ssq_tool_processor::{BALL_OCCURS, ProcessorChain};
+use tracing::error;
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 pub struct FilterByWeekRequest {
@@ -94,6 +98,28 @@ where
             .collect::<Vec<&PrBusinessObj>>();
         let call_tool_result =
             CallToolResult::success(vec![Content::json(prize_record_business_objs)?]);
+        return Ok(call_tool_result);
+    }
+
+    #[tool(description = "统计双色球出现情况")]
+    pub async fn caculate_ball_occurence(&self) -> Result<CallToolResult, ErrorData> {
+        let mut processor_context = ProcessorContext::new(
+            self.prize_record_business_obj,
+            self.prize_record_business_obj.len(),
+        );
+        let processor_chain = ProcessorChain::new("calculate_ball_occurence_processor_chain");
+        let mut processor_chain = processor_chain.add_processor(Box::new(OccurProcessor));
+        processor_chain
+            .execute(&mut processor_context)
+            .await
+            .map_err(|e| {
+                error!("计算双色球出现情况失败：{e:?}");
+                ErrorData::internal_error("计算双色球出现情况失败", None)
+            })?;
+        let ball_occurrence = processor_context
+            .get_attribute(&BALL_OCCURS)
+            .ok_or(ErrorData::internal_error("无法找到双色球出现情况", None))?;
+        let call_tool_result = CallToolResult::success(vec![Content::json(ball_occurrence)?]);
         return Ok(call_tool_result);
     }
 }
