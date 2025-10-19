@@ -1,4 +1,4 @@
-use crate::context::{OccurDetail, ProcessorContext, ProcessorContextAttr, Relationship};
+use crate::context::{OccurrenceDetail, ProcessorContext, ProcessorContextAttr, Relationship};
 use crate::error::Error;
 use derive_more::Display;
 use ssq_tool_domain::{Ball, BlueBall, RedBall};
@@ -21,7 +21,7 @@ pub static BLUE_BALL_RELATIONSHIPS: LazyLock<
 pub static RED_BALL_RELATIONSHIPS: LazyLock<ProcessorContextAttr<HashMap<RedBall, Relationship>>> =
     LazyLock::new(|| ProcessorContextAttr::new("RED_BALL_RELATIONSHIPS"));
 
-pub static BALL_OCCURS: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurDetail>>>> =
+pub static BALL_OCCURS: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurrenceDetail>>>> =
     LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURS")));
 
 pub static SUMMARIES: LazyLock<ProcessorContextAttr<Vec<SummaryResult>>> =

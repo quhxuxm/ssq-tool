@@ -2,7 +2,7 @@ use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use ssq_tool_domain::{BlueBall, PrBusinessObj, RedBall};
 use std::{
-    any::{Any, type_name},
+    any::{type_name, Any},
     borrow::Borrow,
     collections::HashMap,
     marker::PhantomData,
@@ -90,7 +90,7 @@ impl<'a> ProcessorContext<'a> {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename = "出现细节")]
-pub struct OccurDetail {
+pub struct OccurrenceDetail {
     #[serde(rename = "平均出现间隔")]
     average_occur_interval: usize,
     #[serde(rename = "官方数据中的出现次数")]
@@ -101,7 +101,7 @@ pub struct OccurDetail {
     occurrence_count_by_average_interval: usize,
 }
 
-impl OccurDetail {
+impl OccurrenceDetail {
     pub fn average_occur_interval(&self) -> usize {
         self.average_occur_interval
     }

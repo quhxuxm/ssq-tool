@@ -5,7 +5,7 @@ use rmcp::model::{CallToolResult, Content, ServerCapabilities, ServerInfo};
 use rmcp::{schemars, tool, tool_handler, tool_router, ErrorData, ServerHandler};
 use ssq_tool_domain::PrBusinessObj;
 use ssq_tool_processor::context::ProcessorContext;
-use ssq_tool_processor::prepare::occur::OccurProcessor;
+use ssq_tool_processor::prepare::occurrence::OccurrenceProcessor;
 use ssq_tool_processor::{ProcessorChain, BALL_OCCURS};
 use tracing::error;
 
@@ -108,7 +108,7 @@ where
             self.prize_record_business_obj.len(),
         );
         let processor_chain = ProcessorChain::new("calculate_ball_occurence_processor_chain");
-        let mut processor_chain = processor_chain.add_processor(Box::new(OccurProcessor));
+        let mut processor_chain = processor_chain.add_processor(Box::new(OccurrenceProcessor));
         processor_chain
             .execute(&mut processor_context)
             .await

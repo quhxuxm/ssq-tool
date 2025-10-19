@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 
-use crate::context::OccurDetail;
-use crate::{BALL_OCCURS, Processor, ProcessorContext, error::Error};
+use crate::context::OccurrenceDetail;
+use crate::{error::Error, Processor, ProcessorContext, BALL_OCCURS};
 use ssq_tool_domain::Ball;
 use tracing::trace;
 
-pub struct OccurProcessor;
+pub struct OccurrenceProcessor;
 
 #[async_trait::async_trait]
-impl Processor for OccurProcessor {
+impl Processor for OccurrenceProcessor {
     fn name(&self) -> &str {
-        "OccurProcessor"
+        "OccurrenceProcessor"
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
@@ -40,7 +40,7 @@ impl Processor for OccurProcessor {
                 trace!("蓝球 {ball} 出现索引：{v:?}");
             }
         });
-        let mut ball_occurs = HashMap::<Ball, OccurDetail>::new();
+        let mut ball_occurs = HashMap::<Ball, OccurrenceDetail>::new();
         balls_occur_seq.iter().for_each(|(ball, occur_seqs)| {
             let latest_occur_seq = occur_seqs[0];
             let occurrence_count = occur_seqs.len();
@@ -70,7 +70,7 @@ impl Processor for OccurProcessor {
                     );
                 })
                 .or_insert_with(|| {
-                    let mut occur_info = OccurDetail::default();
+                    let mut occur_info = OccurrenceDetail::default();
                     occur_info.set_occurrence_count_by_official_data(occurrence_count);
                     occur_info.set_average_occur_interval(average_interval);
                     occur_info.set_latest_occur_seq(latest_occur_seq);

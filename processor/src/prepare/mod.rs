@@ -1,2 +1,2 @@
-pub mod occur;
+pub mod occurrence;
 pub mod relationship;

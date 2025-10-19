@@ -5,7 +5,7 @@ use rmcp::transport::streamable_http_server::session::local::LocalSessionManager
 use rmcp_actix_web::transport::StreamableHttpService;
 use ssq_tool_collector::Collector;
 use ssq_tool_domain::PrBusinessObj;
-use ssq_tool_processor::prepare::occur::OccurProcessor;
+use ssq_tool_processor::prepare::occurrence::OccurrenceProcessor;
 use ssq_tool_processor::prepare::relationship::RelationshipProcessor;
 use ssq_tool_processor::summary::SummaryProcessor;
 use ssq_tool_processor::{context::ProcessorContext, Processor, ProcessorChain, SUMMARIES};
@@ -20,7 +20,7 @@ static OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ: OnceLock<Vec<PrBusinessObj>> = OnceLo
 fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
         Box::new(RelationshipProcessor),
-        Box::new(OccurProcessor),
+        Box::new(OccurrenceProcessor),
         Box::new(SummaryProcessor),
     ];
     ProcessorChain::from(processors)
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Error> {
             Error::Other("把往期双色球数据放进全局变量失败.".to_string())
         })?;
     command_line().await?;
-    create_mcp_server().await?;
+    // create_mcp_server().await?;
     Ok(())
 }
 
@@ -76,6 +76,7 @@ async fn command_line() -> Result<(), Error> {
     Ok(())
 }
 
+#[allow(unused)]
 async fn create_mcp_server() -> Result<(), Error> {
     let service = Arc::new(|| {
         let ssq_mcp_service = SsqMcpService::new(OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ.get().ok_or(
