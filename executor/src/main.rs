@@ -25,7 +25,7 @@ fn generate_processor_chain() -> ProcessorChain {
         Box::new(BallOccurrenceProcessor),
         Box::new(BallRelationshipFpProcessor::new(10)),
         Box::new(BlueBallOccurrenceFpProcessor::new(150, 5)),
-        Box::new(FinalResultsProcessor),
+        Box::new(FinalResultsProcessor::new(5)),
     ];
     ProcessorChain::from(processors)
 }

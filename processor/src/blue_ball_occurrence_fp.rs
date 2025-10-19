@@ -45,7 +45,7 @@ impl Processor for BlueBallOccurrenceFpProcessor {
         );
         let fp_result = fp_growth.find_frequent_patterns();
         info!(
-            "蓝球出现情况频繁模式基础参数，最小支持度：{}，最近 {} 期内可能出现的 {} 个频繁模式",
+            "蓝球出现情况频繁模式基础参数，最小支持度：{}，每 {} 期内可能出现的 {} 个频繁模式",
             self.minimum_support,
             self.occurrence_window_size,
             fp_result.frequent_patterns_num()
