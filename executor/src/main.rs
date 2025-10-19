@@ -7,7 +7,7 @@ use ssq_tool_collector::Collector;
 use ssq_tool_domain::PrBusinessObj;
 use ssq_tool_processor::prepare::occurrence::OccurrenceProcessor;
 use ssq_tool_processor::prepare::relationship::RelationshipProcessor;
-use ssq_tool_processor::summary::SummaryProcessor;
+use ssq_tool_processor::summary::customize::CustomizeSummaryProcessor;
 use ssq_tool_processor::{context::ProcessorContext, Processor, ProcessorChain, SUMMARIES};
 use std::sync::{Arc, OnceLock};
 use tracing::{error, info, level_filters::LevelFilter};
@@ -21,7 +21,7 @@ fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
         Box::new(RelationshipProcessor),
         Box::new(OccurrenceProcessor),
-        Box::new(SummaryProcessor),
+        Box::new(CustomizeSummaryProcessor),
     ];
     ProcessorChain::from(processors)
 }

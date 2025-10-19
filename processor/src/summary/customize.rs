@@ -1,19 +1,19 @@
 use crate::context::Relationship;
 use crate::{
-    BALL_OCCURS, BLUE_BALL_RELATIONSHIPS, Processor, ProcessorContext, SUMMARIES, SummaryResult,
-    error::Error,
+    error::Error, Processor, ProcessorContext, SummaryResult, BALL_OCCURS, BLUE_BALL_RELATIONSHIPS,
+    SUMMARIES,
 };
 use itertools::Itertools;
 use rand::prelude::SliceRandom;
 use ssq_tool_domain::{Ball, BlueBall, RedBall};
 use tracing::{debug, info};
 
-pub struct SummaryProcessor;
+pub struct CustomizeSummaryProcessor;
 
 #[async_trait::async_trait]
-impl Processor for SummaryProcessor {
+impl Processor for CustomizeSummaryProcessor {
     fn name(&self) -> &str {
-        "SummaryProcessor"
+        "CustomizeSummaryProcessor"
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
