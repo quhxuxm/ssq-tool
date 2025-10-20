@@ -9,6 +9,7 @@ use ssq_tool_processor::ball_occurrence::BallOccurrenceProcessor;
 use ssq_tool_processor::ball_relationship_fp::BallRelationshipFpProcessor;
 use ssq_tool_processor::blue_ball_occurrence_fp::BlueBallOccurrenceFpProcessor;
 use ssq_tool_processor::final_result::FinalResultsProcessor;
+use ssq_tool_processor::generate_normalize_data::GenerateNormalizeDataProcessor;
 use ssq_tool_processor::{
     context::ProcessorContext, Processor, ProcessorChain, FINAL_PROCESSOR_CHAIN_RESULTS,
 };
@@ -22,10 +23,11 @@ static OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ: OnceLock<Vec<PrBusinessObj>> = OnceLo
 
 fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
+        Box::new(GenerateNormalizeDataProcessor::new("./generate.txt".into())),
         Box::new(BallOccurrenceProcessor),
         Box::new(BallRelationshipFpProcessor::new(10)),
-        Box::new(BlueBallOccurrenceFpProcessor::new(150, 5)),
-        Box::new(FinalResultsProcessor::new(5)),
+        Box::new(BlueBallOccurrenceFpProcessor::new(480, 10)),
+        Box::new(FinalResultsProcessor::new(10, 5)),
     ];
     ProcessorChain::from(processors)
 }

@@ -17,6 +17,7 @@ pub mod blue_ball_occurrence_fp;
 pub mod context;
 pub mod error;
 pub mod final_result;
+pub mod generate_normalize_data;
 
 pub static BALL_OCCURRENCE: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurrenceDetail>>>> =
     LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURRENCE")));

@@ -6,4 +6,6 @@ pub enum Error {
     InvalidBallValue(#[from] derive_more::TryFromReprError<usize>),
     #[error("processor context attribute [{0}] not exist.")]
     ContextAttrNotExist(String),
+    #[error(transparent)]
+    IoFailure(#[from] std::io::Error),
 }

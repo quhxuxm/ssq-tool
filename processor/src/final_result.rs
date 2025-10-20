@@ -1,18 +1,22 @@
 use crate::context::ProcessorContext;
 use crate::error::Error;
-use crate::{Processor, BLUE_BALL_OCCURRENCE_FP};
+use crate::{Processor, BALL_RELATIONSHIP_FP, BLUE_BALL_OCCURRENCE_FP};
 use itertools::Itertools;
-use ssq_tool_domain::BlueBall;
+use ssq_tool_domain::{BlueBall, RedBall};
 use std::collections::HashMap;
 use tracing::{info, trace};
 
 pub struct FinalResultsProcessor {
-    result_size: usize,
+    latest_n: usize,
+    red_ball_relationship_min_support: usize,
 }
 
 impl FinalResultsProcessor {
-    pub fn new(result_size: usize) -> Self {
-        Self { result_size }
+    pub fn new(latest_n: usize, red_ball_relationship_min_support: usize) -> Self {
+        Self {
+            latest_n,
+            red_ball_relationship_min_support,
+        }
     }
 }
 
@@ -26,7 +30,7 @@ impl Processor for FinalResultsProcessor {
         let latest_n_blue_balls = context
             .get_prize_records()
             .iter()
-            .take(self.result_size)
+            .take(self.latest_n)
             .map(|record| record.blue_ball)
             .collect::<Vec<BlueBall>>();
         let blue_ball_occurrence_fp =
@@ -70,7 +74,7 @@ impl Processor for FinalResultsProcessor {
             })
         });
 
-        trace!("可能出现的蓝球序列：{most_possible_blue_balls:?}");
+        info!("可能出现的蓝球序列：{most_possible_blue_balls:?}");
         let mut result_blue_balls = Vec::<BlueBall>::new();
         latest_n_blue_balls.iter().for_each(|ball| {
             let related_blue_balls = most_possible_blue_balls
@@ -84,7 +88,24 @@ impl Processor for FinalResultsProcessor {
             .unique()
             .collect::<Vec<BlueBall>>();
 
-        info!("选定的蓝球序列：{result_blue_balls:?}");
+        let red_ball_occurrence_fp = context
+            .get_attribute(&BALL_RELATIONSHIP_FP)
+            .ok_or(Error::ContextAttrNotExist(BALL_RELATIONSHIP_FP.to_string()))?;
+
+        result_blue_balls.iter().for_each(|blue_ball| {
+            if let Some(red_balls) = red_ball_occurrence_fp.get(blue_ball) {
+                let red_balls = red_balls
+                    .frequent_patterns()
+                    .iter()
+                    .filter(|(_, support)| support >= &self.red_ball_relationship_min_support)
+                    .filter(|(v, _)| v.len() > 1)
+                    .map(|(item, _)| item.clone())
+                    .collect::<Vec<Vec<RedBall>>>();
+
+                info!("蓝球：{blue_ball}，红球：{red_balls:?}");
+            }
+        });
+
         Ok(())
     }
 }
