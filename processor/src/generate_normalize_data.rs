@@ -32,8 +32,8 @@ impl Processor for GenerateNormalizeDataProcessor {
         context.get_prize_records().iter().try_for_each(|record| {
             writeln!(
                 output_file,
-                "期号：{}，日期：{}，星期：{}，蓝球：{}，红球：{:?}",
-                record.code, record.date, record.day, record.blue_ball, record.red_balls
+                "{}，期号：{}，星期：{}，蓝球：{}，红球：{:?}",
+                record.date, record.code, record.day, record.blue_ball, record.red_balls
             )?;
 
             Result::<(), Error>::Ok(())
