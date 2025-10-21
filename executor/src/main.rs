@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::service::ssq_mcp_service::SsqMcpService;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
 use rmcp_actix_web::transport::StreamableHttpService;
 use ssq_tool_collector::Collector;
@@ -10,7 +10,7 @@ use ssq_tool_processor::ball_relationship_fp::BallRelationshipFpProcessor;
 use ssq_tool_processor::blue_ball_occurrence_fp::BlueBallOccurrenceFpProcessor;
 use ssq_tool_processor::final_result::FinalResultsProcessor;
 use ssq_tool_processor::generate_normalize_data::GenerateNormalizeDataProcessor;
-use ssq_tool_processor::{context::ProcessorContext, Processor, ProcessorChain};
+use ssq_tool_processor::{Processor, ProcessorChain, context::ProcessorContext};
 use std::sync::{Arc, OnceLock};
 use tracing::{error, info, level_filters::LevelFilter};
 
@@ -21,10 +21,10 @@ static OFFICIAL_PRIZE_RECORD_BUSINESS_OBJ: OnceLock<Vec<PrBusinessObj>> = OnceLo
 
 fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
-        Box::new(GenerateNormalizeDataProcessor::new("./generate.txt".into())),
         Box::new(BallOccurrenceProcessor),
         Box::new(BallRelationshipFpProcessor::new(10)),
         Box::new(BlueBallOccurrenceFpProcessor::new(480, 10)),
+        Box::new(GenerateNormalizeDataProcessor::new("./generate.txt".into())),
         Box::new(FinalResultsProcessor::new(10, 5)),
     ];
     ProcessorChain::from(processors)
