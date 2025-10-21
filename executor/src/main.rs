@@ -10,9 +10,7 @@ use ssq_tool_processor::ball_relationship_fp::BallRelationshipFpProcessor;
 use ssq_tool_processor::blue_ball_occurrence_fp::BlueBallOccurrenceFpProcessor;
 use ssq_tool_processor::final_result::FinalResultsProcessor;
 use ssq_tool_processor::generate_normalize_data::GenerateNormalizeDataProcessor;
-use ssq_tool_processor::{
-    context::ProcessorContext, Processor, ProcessorChain, FINAL_PROCESSOR_CHAIN_RESULTS,
-};
+use ssq_tool_processor::{context::ProcessorContext, Processor, ProcessorChain};
 use std::sync::{Arc, OnceLock};
 use tracing::{error, info, level_filters::LevelFilter};
 
@@ -73,12 +71,12 @@ async fn command_line() -> Result<(), Error> {
     let mut context = ProcessorContext::new(&pr_bus_objs, 5);
     info!("开始分析双色球数据...");
     processor_chain.execute(&mut context).await?;
-    let final_processor_chain_results = context
-        .get_attribute(&FINAL_PROCESSOR_CHAIN_RESULTS)
-        .ok_or(Error::NoFinalProcessorChainResults)?;
-    final_processor_chain_results.iter().for_each(|record| {
-        println!("{record}");
-    });
+    // let final_processor_chain_results = context
+    //     .get_attribute(&FINAL_PROCESSOR_CHAIN_RESULTS)
+    //     .ok_or(Error::NoFinalProcessorChainResults)?;
+    // final_processor_chain_results.iter().for_each(|record| {
+    //     println!("{record}");
+    // });
     Ok(())
 }
 
