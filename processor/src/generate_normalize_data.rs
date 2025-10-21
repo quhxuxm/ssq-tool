@@ -1,6 +1,6 @@
+use crate::Processor;
 use crate::context::ProcessorContext;
 use crate::error::Error;
-use crate::Processor;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
@@ -22,7 +22,7 @@ impl Processor for GenerateNormalizeDataProcessor {
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
-        if let Err(_) = std::fs::remove_file(&self.file_path) {
+        if std::fs::remove_file(&self.file_path).is_err() {
             warn!("没有旧文件：{:?}", self.file_path)
         };
         let mut output_file = OpenOptions::new()
