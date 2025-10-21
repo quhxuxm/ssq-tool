@@ -7,6 +7,7 @@ use codec::date_codec;
 use codec::prize_grade_codec;
 
 use codec::red_balls_codec;
+use codec::u64_codec;
 use codec::usize_codec;
 use codec::vec_str_codec;
 use serde::{Deserialize, Serialize};
@@ -72,7 +73,8 @@ pub(super) struct PrizeRecord {
     pub blue: usize,
     #[serde(with = "usize_codec")]
     pub blue2: usize,
-    pub sales: String,
+    #[serde(with = "u64_codec")]
+    pub sales: u64,
     #[serde(rename = "poolmoney")]
     pub pool_money: String,
     #[serde(with = "vec_str_codec")]

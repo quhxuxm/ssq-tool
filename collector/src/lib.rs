@@ -40,6 +40,7 @@ fn collect_business_obj(
 
     let mut seq = 0;
     let mut business_objs = Vec::new();
+
     for prize_record in prize_records {
         let PrizeRecord {
             code,
@@ -47,6 +48,8 @@ fn collect_business_obj(
             red,
             blue,
             week,
+            sales,
+            prize_grades,
             ..
         } = prize_record;
         let day = format!("星期{week}");
@@ -66,6 +69,11 @@ fn collect_business_obj(
             blue_ball,
             red_balls,
             day,
+            total_tickets: sales / 2,
+            total_prized_tickets: prize_grades
+                .values()
+                .map(|grade_obj| grade_obj.prize_type_number as u64)
+                .sum(),
         };
         business_objs.push(business_obj);
         seq += 1;

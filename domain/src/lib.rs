@@ -240,4 +240,8 @@ pub struct PrBusinessObj {
     pub blue_ball: BlueBall,
     #[serde(rename = "红球")]
     pub red_balls: [RedBall; 6],
+    #[serde(rename = "总人数")]
+    pub total_tickets: u64,
+    #[serde(rename = "中奖人数")]
+    pub total_prized_tickets: u64,
 }
