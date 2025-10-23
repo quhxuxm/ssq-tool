@@ -40,12 +40,8 @@ impl Processor for GenerateNormalizeDataProcessor {
         context.get_prize_records().iter().try_for_each(|record| {
             let blue_ball=Ball::Blue(record.blue_ball);
             let blue_ball_occurrence = ball_occurrence.get(&blue_ball).ok_or(Error::OtherFailure(format!("无法找到蓝球：{blue_ball}")))?;
-            let top_related_red_balls=match ball_occurrence_fp.get(&record.blue_ball){
-                Some(fp_result) => {
-                   fp_result.frequent_patterns().iter().sorted_by_key(|pattern| pattern.1).flat_map(|pattern|&pattern.0).copied().unique().take(6).sorted().collect()
-                },
-                None => vec![],
-            };
+            let top_related_red_balls= ball_occurrence_fp.get(&record.blue_ball).map(|fp_result|
+                fp_result.frequent_patterns().iter().sorted_by_key(|pattern| pattern.1).flat_map(|pattern|&pattern.0).copied().unique().take(6).sorted().collect::<Vec<RedBall>>()).ok_or(Error::OtherFailure(format!("没有找到蓝球出现情况：{blue_ball}")))?;
             let matched_red_balls=   top_related_red_balls.iter().copied().filter(|ball|record.red_balls.contains(ball)).collect::<Vec<RedBall>>();
             let rate_of_match = matched_red_balls.len() as f64 / 6f64;
 
