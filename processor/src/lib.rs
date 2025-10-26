@@ -21,24 +21,32 @@ pub mod generate_normalize_data;
 
 pub static BALL_OCCURRENCE: LazyLock<Arc<ProcessorContextAttr<HashMap<Ball, OccurrenceDetail>>>> =
     LazyLock::new(|| Arc::new(ProcessorContextAttr::new("BALL_OCCURRENCE")));
-pub static BALL_RELATIONSHIP_FP: LazyLock<
+
+pub static BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP: LazyLock<
     ProcessorContextAttr<HashMap<BlueBall, FPResult<RedBall>>>,
-> = LazyLock::new(|| ProcessorContextAttr::new("BALL_RELATIONSHIP_FP_RESULT"));
-pub static BLUE_BALL_OCCURRENCE_FP: LazyLock<ProcessorContextAttr<FPResult<BlueBall>>> =
-    LazyLock::new(|| ProcessorContextAttr::new("BLUR_BALL_OCCURRENCE_FP_RESULT"));
+> = LazyLock::new(|| ProcessorContextAttr::new("BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP"));
+
+pub static RED_BALL_AND_RED_BALL_RELATIONSHIP_FP: LazyLock<
+    ProcessorContextAttr<HashMap<RedBall, FPResult<RedBall>>>,
+> = LazyLock::new(|| ProcessorContextAttr::new("RED_BALL_AND_RED_BALL_RELATIONSHIP_FP"));
+
+pub static BLUE_BALL_NEXT_OCCURRENCES: LazyLock<
+    ProcessorContextAttr<HashMap<BlueBall, HashMap<BlueBall, usize>>>,
+> = LazyLock::new(|| ProcessorContextAttr::new("BLUE_BALL_NEXT_OCCURRENCES"));
+
 pub static FINAL_PROCESSOR_CHAIN_RESULTS: LazyLock<
     ProcessorContextAttr<Vec<FinalProcessorChainResult>>,
 > = LazyLock::new(|| ProcessorContextAttr::new("CUSTOMIZE_SUMMARIES"));
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Display)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Display)]
 #[display("红球：{red_balls:?}; 蓝球：{blue_ball}")]
 pub struct FinalProcessorChainResult {
     blue_ball: BlueBall,
-    red_balls: [RedBall; 6],
+    red_balls: Vec<RedBall>,
 }
 
 impl FinalProcessorChainResult {
-    pub fn new(blue_ball: BlueBall, red_balls: [RedBall; 6]) -> Self {
+    pub fn new(blue_ball: BlueBall, red_balls: Vec<RedBall>) -> Self {
         Self {
             blue_ball,
             red_balls,

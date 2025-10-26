@@ -1,22 +1,21 @@
 use crate::context::ProcessorContext;
 use crate::error::Error;
-use crate::{Processor, BALL_RELATIONSHIP_FP, BLUE_BALL_OCCURRENCE_FP};
+use crate::{
+    FinalProcessorChainResult, Processor,
+    BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP, BLUE_BALL_NEXT_OCCURRENCES, FINAL_PROCESSOR_CHAIN_RESULTS,
+};
 use itertools::Itertools;
 use ssq_tool_domain::{BlueBall, RedBall};
 use std::collections::HashMap;
 use tracing::info;
 
 pub struct FinalResultsProcessor {
-    latest_n: usize,
-    red_ball_relationship_min_support: usize,
+    final_result_size: usize,
 }
 
 impl FinalResultsProcessor {
-    pub fn new(latest_n: usize, red_ball_relationship_min_support: usize) -> Self {
-        Self {
-            latest_n,
-            red_ball_relationship_min_support,
-        }
+    pub fn new(final_result_size: usize) -> Self {
+        Self { final_result_size }
     }
 }
 
@@ -27,85 +26,80 @@ impl Processor for FinalResultsProcessor {
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
-        let latest_n_blue_balls = context
+        let sorted_blue_balls = context
             .get_prize_records()
             .iter()
-            .take(self.latest_n)
+            .sorted_by_key(|record| record.date)
+            .rev()
             .map(|record| record.blue_ball)
             .collect::<Vec<BlueBall>>();
-        let blue_ball_occurrence_fp =
-            context
-                .get_attribute(&BLUE_BALL_OCCURRENCE_FP)
-                .ok_or(Error::ContextAttrNotExist(
-                    BLUE_BALL_OCCURRENCE_FP.to_string(),
-                ))?;
 
-        let blue_ball_frequent_patterns = blue_ball_occurrence_fp
-            .frequent_patterns()
-            .iter()
-            .filter(|val| val.0.len() > 1)
-            .inspect(|(pattern, support)| {
-                info!("蓝球连续出现情况频繁模式: {pattern:?}，支持度: {support}");
-            })
-            .map(|(pattern, _)| pattern.to_vec())
-            .collect::<Vec<Vec<BlueBall>>>();
-
-        let mut most_possible_blue_balls = HashMap::<BlueBall, Vec<BlueBall>>::new();
-        blue_ball_frequent_patterns.iter().for_each(|pattern| {
-            pattern.iter().copied().for_each(|blue_ball| {
-                most_possible_blue_balls
-                    .entry(blue_ball)
-                    .and_modify(|related_balls| {
-                        related_balls.extend(pattern.to_vec());
-                        *related_balls = related_balls
-                            .iter()
-                            .copied()
-                            .unique()
-                            .filter(|&current| blue_ball != current)
-                            .collect::<Vec<BlueBall>>();
-                    })
-                    .or_insert(
-                        pattern
-                            .iter()
-                            .copied()
-                            .filter(|&current| blue_ball != current)
-                            .collect(),
-                    );
-            })
-        });
-
-        info!("可能出现的蓝球序列：{most_possible_blue_balls:?}");
+        let blue_ball_next_occurrences = context.get_attribute(&BLUE_BALL_NEXT_OCCURRENCES).ok_or(
+            Error::ContextAttrNotExist(BLUE_BALL_NEXT_OCCURRENCES.to_string()),
+        )?;
+        let last_occur_blue_ball = sorted_blue_balls[0];
+        let most_possible_blue_balls = blue_ball_next_occurrences.get(&last_occur_blue_ball);
+        info!(
+            "最后一次中奖的篮球 {last_occur_blue_ball} 后续可能出现的蓝球情况：{most_possible_blue_balls:?}"
+        );
         let mut result_blue_balls = Vec::<BlueBall>::new();
-        latest_n_blue_balls.iter().for_each(|ball| {
-            let related_blue_balls = most_possible_blue_balls
-                .get(ball)
-                .cloned()
-                .unwrap_or(vec![]);
-            result_blue_balls.extend(related_blue_balls);
-        });
+        if let Some(most_possible_blue_balls) = most_possible_blue_balls {
+            most_possible_blue_balls
+                .iter()
+                .sorted_by_key(|kv| kv.1)
+                .rev()
+                .for_each(|(ball, _)| {
+                    result_blue_balls.push(*ball);
+                });
+        }
+        info!(
+            "最后一次中奖的篮球 {last_occur_blue_ball} 后续可能出现的蓝球序列：{result_blue_balls:?}"
+        );
         let result_blue_balls = result_blue_balls
             .into_iter()
             .unique()
+            .take(self.final_result_size)
             .collect::<Vec<BlueBall>>();
-
         let red_ball_occurrence_fp = context
-            .get_attribute(&BALL_RELATIONSHIP_FP)
-            .ok_or(Error::ContextAttrNotExist(BALL_RELATIONSHIP_FP.to_string()))?;
+            .get_attribute(&BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP)
+            .ok_or(Error::ContextAttrNotExist(
+                BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP.to_string(),
+            ))?;
 
-        result_blue_balls.iter().for_each(|blue_ball| {
-            if let Some(red_balls) = red_ball_occurrence_fp.get(blue_ball) {
-                let red_balls = red_balls
-                    .frequent_patterns()
-                    .iter()
-                    .filter(|(_, support)| support >= &self.red_ball_relationship_min_support)
-                    .filter(|(v, _)| v.len() > 1)
-                    .map(|(item, _)| item.clone())
-                    .collect::<Vec<Vec<RedBall>>>();
+        let mut final_results = Vec::<FinalProcessorChainResult>::new();
+        result_blue_balls.iter().try_for_each(|blue_ball| {
+            let top_related_red_balls = red_ball_occurrence_fp
+                .get(blue_ball)
+                .map(|red_ball_fp_result| {
+                    let red_ball_occurrence_fp_pattern = red_ball_fp_result.frequent_patterns();
+                    let red_ball_occurrence_fp_ave_support = red_ball_occurrence_fp_pattern
+                        .iter()
+                        .map(|pattern| pattern.1)
+                        .sum::<usize>()
+                        / red_ball_occurrence_fp_pattern.len();
+                    red_ball_occurrence_fp_pattern
+                        .iter()
+                        .sorted_by_key(|pattern| pattern.1)
+                        .rev()
+                        .filter(|pattern| pattern.1 > red_ball_occurrence_fp_ave_support)
+                        .take(6)
+                        .flat_map(|pattern| &pattern.0)
+                        .copied()
+                        .unique()
+                        .sorted()
+                        .take(6)
+                        .collect::<Vec<RedBall>>()
+                })
+                .ok_or(Error::OtherFailure(format!(
+                    "没有找到蓝球出现情况：{blue_ball}"
+                )))?;
+            let one_result =
+                FinalProcessorChainResult::new(*blue_ball, top_related_red_balls.to_vec());
+            final_results.push(one_result);
 
-                info!("蓝球：{blue_ball}，红球：{red_balls:?}");
-            }
-        });
-
+            Ok::<(), Error>(())
+        })?;
+        context.set_attribute(&FINAL_PROCESSOR_CHAIN_RESULTS, final_results);
         Ok(())
     }
 }

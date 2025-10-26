@@ -1,6 +1,6 @@
 use crate::context::ProcessorContext;
 use crate::error::Error;
-use crate::{Processor, BALL_OCCURRENCE, BALL_RELATIONSHIP_FP};
+use crate::{Processor, BALL_OCCURRENCE, BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP};
 use itertools::Itertools;
 use ssq_tool_domain::{Ball, RedBall};
 use std::fs::OpenOptions;
@@ -27,9 +27,12 @@ impl Processor for GenerateNormalizeDataProcessor {
         let ball_occurrence = context
             .get_attribute(&BALL_OCCURRENCE)
             .ok_or(Error::ContextAttrNotExist(BALL_OCCURRENCE.to_string()))?;
-        let ball_occurrence_fp = context
-            .get_attribute(&BALL_RELATIONSHIP_FP)
-            .ok_or(Error::ContextAttrNotExist(BALL_RELATIONSHIP_FP.to_string()))?;
+        let blue_ball_and_red_ball_occurrence_fp = context
+            .get_attribute(&BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP)
+            .ok_or(Error::ContextAttrNotExist(
+                BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP.to_string(),
+            ))?;
+
         if std::fs::remove_file(&self.file_path).is_err() {
             warn!("没有旧文件：{:?}", self.file_path)
         };
@@ -38,13 +41,29 @@ impl Processor for GenerateNormalizeDataProcessor {
             .append(true)
             .open(&self.file_path)?;
         context.get_prize_records().iter().try_for_each(|record| {
-            let blue_ball=Ball::Blue(record.blue_ball);
+            let blue_ball = Ball::Blue(record.blue_ball);
             let blue_ball_occurrence = ball_occurrence.get(&blue_ball).ok_or(Error::OtherFailure(format!("无法找到蓝球：{blue_ball}")))?;
-            let top_related_red_balls= ball_occurrence_fp.get(&record.blue_ball).map(|fp_result|
-                fp_result.frequent_patterns().iter().sorted_by_key(|pattern| pattern.1).flat_map(|pattern|&pattern.0).copied().unique().take(6).sorted().collect::<Vec<RedBall>>()).ok_or(Error::OtherFailure(format!("没有找到蓝球出现情况：{blue_ball}")))?;
-            let matched_red_balls=   top_related_red_balls.iter().copied().filter(|ball|record.red_balls.contains(ball)).collect::<Vec<RedBall>>();
+            let top_related_red_balls = blue_ball_and_red_ball_occurrence_fp.get(&record.blue_ball).map(|red_ball_fp_result| {
+                let red_ball_occurrence_fp_pattern = red_ball_fp_result.frequent_patterns();
+                let red_ball_occurrence_fp_ave_support = red_ball_occurrence_fp_pattern
+                    .iter()
+                    .map(|pattern| pattern.1)
+                    .sum::<usize>()
+                    / red_ball_occurrence_fp_pattern.len();
+                red_ball_fp_result.
+                    frequent_patterns().iter()
+                    .sorted_by_key(|pattern| pattern.1)
+                    .rev()
+                    .filter(|pattern| pattern.1 > red_ball_occurrence_fp_ave_support)
+                    .take(6)
+                    .flat_map(|pattern| &pattern.0)
+                    .copied().unique()
+                    .sorted()
+                    .take(6)
+                    .collect::<Vec<RedBall>>()
+            }).ok_or(Error::OtherFailure(format!("没有找到蓝球出现情况：{blue_ball}")))?;
+            let matched_red_balls = top_related_red_balls.iter().copied().filter(|ball| record.red_balls.contains(ball)).collect::<Vec<RedBall>>();
             let rate_of_match = matched_red_balls.len() as f64 / 6f64;
-
             writeln!(
                 output_file,
                 "{}，期号：{}，星期：{}，中奖蓝球：{}，中奖红球：{:?}，总中奖注数：{}，总销售注数：{}，蓝球平均出现间隔：{}，蓝球预期出现次数：{}，蓝球实际出现次数：{}，推测关联红球：{:?}，推测匹配率：{:.2}%",

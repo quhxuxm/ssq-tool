@@ -2,7 +2,7 @@ use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use ssq_tool_domain::PrBusinessObj;
 use std::{
-    any::{type_name, Any},
+    any::{Any, type_name},
     borrow::Borrow,
     collections::HashMap,
     marker::PhantomData,

@@ -1,8 +1,10 @@
 use crate::context::ProcessorContext;
 use crate::error::Error;
-use crate::{Processor, BLUE_BALL_OCCURRENCE_FP};
+use crate::{Processor, BLUE_BALL_NEXT_OCCURRENCES};
 use fp_growth::algorithm::FPGrowth;
+use itertools::Itertools;
 use ssq_tool_domain::BlueBall;
+use std::collections::HashMap;
 use tracing::info;
 
 pub struct BlueBallOccurrenceFpProcessor {
@@ -29,28 +31,32 @@ impl Processor for BlueBallOccurrenceFpProcessor {
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
-        let blue_ball_occurrence_transactions_by_window_size = context
+        let mut blue_ball_following_occurrence =
+            HashMap::<BlueBall, HashMap<BlueBall, usize>>::new();
+
+        let prized_blue_balls = context
             .get_prize_records()
-            .windows(self.occurrence_window_size)
-            .map(|records| {
-                records
-                    .iter()
-                    .map(|record| record.blue_ball)
-                    .collect::<Vec<BlueBall>>()
-            })
-            .collect::<Vec<Vec<BlueBall>>>();
-        let fp_growth = FPGrowth::new(
-            blue_ball_occurrence_transactions_by_window_size,
-            self.minimum_support,
-        );
-        let fp_result = fp_growth.find_frequent_patterns();
-        info!(
-            "蓝球出现情况频繁模式基础参数，最小支持度：{}，每 {} 期内可能出现的 {} 个频繁模式",
-            self.minimum_support,
-            self.occurrence_window_size,
-            fp_result.frequent_patterns_num()
-        );
-        context.set_attribute(&BLUE_BALL_OCCURRENCE_FP, fp_result);
+            .iter()
+            .sorted_by_key(|record| record.date)
+            .map(|record| record.blue_ball)
+            .collect::<Vec<BlueBall>>();
+
+        prized_blue_balls.windows(2).for_each(|records| {
+            let current = records[0];
+            let next = records[1];
+            blue_ball_following_occurrence
+                .entry(current)
+                .and_modify(|next_occurrences| {
+                    next_occurrences
+                        .entry(next)
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                })
+                .or_default();
+        });
+
+        info!("蓝球后续出现情况：{blue_ball_following_occurrence:?}");
+        context.set_attribute(&BLUE_BALL_NEXT_OCCURRENCES, blue_ball_following_occurrence);
         Ok(())
     }
 }
