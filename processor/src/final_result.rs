@@ -2,7 +2,7 @@ use crate::context::ProcessorContext;
 use crate::error::Error;
 use crate::{
     FinalProcessorChainResult, Processor,
-    BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP, BLUE_BALL_NEXT_OCCURRENCES, FINAL_PROCESSOR_CHAIN_RESULTS,
+    BLUE_BALL_AND_RED_BALL_RELATIONSHIP_FP, BLUE_BALL_FOLLOWING_OCCURRENCES, FINAL_PROCESSOR_CHAIN_RESULTS,
 };
 use itertools::Itertools;
 use ssq_tool_domain::{BlueBall, RedBall};
@@ -26,6 +26,7 @@ impl Processor for FinalResultsProcessor {
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
+        // 对中奖记录按照从最近到最早进行排序
         let sorted_blue_balls = context
             .get_prize_records()
             .iter()
@@ -34,17 +35,22 @@ impl Processor for FinalResultsProcessor {
             .map(|record| record.blue_ball)
             .collect::<Vec<BlueBall>>();
 
-        let blue_ball_next_occurrences = context.get_attribute(&BLUE_BALL_NEXT_OCCURRENCES).ok_or(
-            Error::ContextAttrNotExist(BLUE_BALL_NEXT_OCCURRENCES.to_string()),
-        )?;
+        let blue_ball_following_occurrences = context
+            .get_attribute(&BLUE_BALL_FOLLOWING_OCCURRENCES)
+            .ok_or(Error::ContextAttrNotExist(
+                BLUE_BALL_FOLLOWING_OCCURRENCES.to_string(),
+            ))?;
+        // 最近一次中奖蓝球
         let last_occur_blue_ball = sorted_blue_balls[0];
-        let most_possible_blue_balls = blue_ball_next_occurrences.get(&last_occur_blue_ball);
+        let following_blue_ball_occurrences =
+            blue_ball_following_occurrences.get(&last_occur_blue_ball);
         info!(
-            "最后一次中奖的篮球 {last_occur_blue_ball} 后续可能出现的蓝球情况：{most_possible_blue_balls:?}"
+            "最后一次中奖的篮球 {last_occur_blue_ball} 后续可能出现的蓝球情况：{following_blue_ball_occurrences:?}"
         );
         let mut result_blue_balls = Vec::<BlueBall>::new();
-        if let Some(most_possible_blue_balls) = most_possible_blue_balls {
-            most_possible_blue_balls
+        if let Some(possible_blue_balls) = following_blue_ball_occurrences {
+            // 按照出现次数从大到小排列
+            possible_blue_balls
                 .iter()
                 .sorted_by_key(|kv| kv.1)
                 .rev()

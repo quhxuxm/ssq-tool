@@ -1,39 +1,25 @@
 use crate::context::ProcessorContext;
 use crate::error::Error;
-use crate::{Processor, BLUE_BALL_NEXT_OCCURRENCES};
-use fp_growth::algorithm::FPGrowth;
+use crate::{Processor, BLUE_BALL_FOLLOWING_OCCURRENCES};
 use itertools::Itertools;
 use ssq_tool_domain::BlueBall;
 use std::collections::HashMap;
 use tracing::info;
 
-pub struct BlueBallOccurrenceFpProcessor {
-    minimum_support: usize,
-    occurrence_window_size: usize,
-}
-
-impl BlueBallOccurrenceFpProcessor {
-    pub fn new(
-        minimum_support: usize,
-        occurrence_window_size: usize,
-    ) -> BlueBallOccurrenceFpProcessor {
-        BlueBallOccurrenceFpProcessor {
-            minimum_support,
-            occurrence_window_size,
-        }
-    }
-}
+#[derive(Default)]
+pub struct BlueBallFollowingOccurrenceProcessor;
 
 #[async_trait::async_trait]
-impl Processor for BlueBallOccurrenceFpProcessor {
+impl Processor for BlueBallFollowingOccurrenceProcessor {
     fn name(&self) -> &str {
-        "BlueBallOccurrenceFpGrowth"
+        "BlueBallFollowingOccurrenceProcessor"
     }
 
     async fn execute(&mut self, context: &mut ProcessorContext) -> Result<(), Error> {
-        let mut blue_ball_following_occurrence =
+        let mut blue_ball_following_occurrences =
             HashMap::<BlueBall, HashMap<BlueBall, usize>>::new();
 
+        //对蓝球的出现情况进行日期从小到大排序
         let prized_blue_balls = context
             .get_prize_records()
             .iter()
@@ -44,7 +30,7 @@ impl Processor for BlueBallOccurrenceFpProcessor {
         prized_blue_balls.windows(2).for_each(|records| {
             let current = records[0];
             let next = records[1];
-            blue_ball_following_occurrence
+            blue_ball_following_occurrences
                 .entry(current)
                 .and_modify(|next_occurrences| {
                     next_occurrences
@@ -55,8 +41,11 @@ impl Processor for BlueBallOccurrenceFpProcessor {
                 .or_default();
         });
 
-        info!("蓝球后续出现情况：{blue_ball_following_occurrence:?}");
-        context.set_attribute(&BLUE_BALL_NEXT_OCCURRENCES, blue_ball_following_occurrence);
+        info!("蓝球后续出现情况：{blue_ball_following_occurrences:?}");
+        context.set_attribute(
+            &BLUE_BALL_FOLLOWING_OCCURRENCES,
+            blue_ball_following_occurrences,
+        );
         Ok(())
     }
 }

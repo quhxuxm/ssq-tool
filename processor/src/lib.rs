@@ -30,7 +30,7 @@ pub static RED_BALL_AND_RED_BALL_RELATIONSHIP_FP: LazyLock<
     ProcessorContextAttr<HashMap<RedBall, FPResult<RedBall>>>,
 > = LazyLock::new(|| ProcessorContextAttr::new("RED_BALL_AND_RED_BALL_RELATIONSHIP_FP"));
 
-pub static BLUE_BALL_NEXT_OCCURRENCES: LazyLock<
+pub static BLUE_BALL_FOLLOWING_OCCURRENCES: LazyLock<
     ProcessorContextAttr<HashMap<BlueBall, HashMap<BlueBall, usize>>>,
 > = LazyLock::new(|| ProcessorContextAttr::new("BLUE_BALL_NEXT_OCCURRENCES"));
 

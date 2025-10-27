@@ -7,7 +7,7 @@ use ssq_tool_collector::Collector;
 use ssq_tool_domain::PrBusinessObj;
 use ssq_tool_processor::ball_occurrence::BallOccurrenceProcessor;
 use ssq_tool_processor::ball_relationship_fp::BallRelationshipFpProcessor;
-use ssq_tool_processor::blue_ball_occurrence_fp::BlueBallOccurrenceFpProcessor;
+use ssq_tool_processor::blue_ball_occurrence_fp::BlueBallFollowingOccurrenceProcessor;
 use ssq_tool_processor::final_result::FinalResultsProcessor;
 use ssq_tool_processor::generate_normalize_data::GenerateNormalizeDataProcessor;
 use ssq_tool_processor::{
@@ -25,7 +25,7 @@ fn generate_processor_chain() -> ProcessorChain {
     let processors: Vec<Box<dyn Processor + Send>> = vec![
         Box::new(BallOccurrenceProcessor),
         Box::new(BallRelationshipFpProcessor::new(10)),
-        Box::new(BlueBallOccurrenceFpProcessor::new(480, 10)),
+        Box::new(BlueBallFollowingOccurrenceProcessor),
         Box::new(GenerateNormalizeDataProcessor::new("./generate.txt".into())),
         Box::new(FinalResultsProcessor::new(5)),
     ];
