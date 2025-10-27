@@ -6,7 +6,6 @@ use crate::{
 };
 use itertools::Itertools;
 use ssq_tool_domain::{BlueBall, RedBall};
-use std::collections::HashMap;
 use tracing::info;
 
 pub struct FinalResultsProcessor {
